@@ -15,10 +15,6 @@ class DependenciesInjection:
         return QuantityToRequest()
     
     @staticmethod
-    def get_lm01_requester() -> LM01_Requester:
-        return LM01_Requester()
-    
-    @staticmethod
     def get_sap_session() -> SAPSessionManager:
         return SAPSessionManager()
 

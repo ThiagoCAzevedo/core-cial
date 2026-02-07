@@ -43,24 +43,3 @@ def upsert_to_request(
 
     except Exception as e:
         raise HTTP_Exceptions().http_500("Erro no upsert (to request)", e)
-    
-
-@router.post("/requester", summary="Requester To Request Values In SAP")
-def requester(
-    svc: LM01_Requester = Depends(DependenciesInjection.get_lm01_requester),
-    svc_sap_session: SAPSessionManager = Depends(DependenciesInjection.get_sap_session)
-):
-    try:
-        session = svc_sap_session.get_session()
-        if not session:
-            raise Exception("Nenhuma sessão SAP ativa. Chame /sap/session primeiro.")
-
-        rows = svc._request_lm01(session)
-
-        return {
-            "message": "Requester concluído com sucesso.",
-            "rows": rows,
-        }
-
-    except Exception as e:
-        raise HTTP_Exceptions().http_500("Erro no request (to request)", e)
