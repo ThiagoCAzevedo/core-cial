@@ -1,8 +1,8 @@
 from services.forecast.fx4pd import ReturnFX4PDValues
-from database.queries import UpsertInfos
 from services.forecast.buff_al import ReturnBuffAssemblyLineValues
 from services.forecast.fx4pd import ReturnFX4PDValues
 from services.forecast.forecaster import DefineForecastValues
+from database.queries import UpsertInfos
 
 
 class BuildPipeline:
