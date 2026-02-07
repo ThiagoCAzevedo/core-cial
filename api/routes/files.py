@@ -9,9 +9,11 @@ router = APIRouter()
 def list_files():
     return ListExcelFiles()._list_files()
 
+
 @router.post("/upload", summary="Upload File in Excel Folder")
 def upload_files(file: UploadFile = File(...)):
     return UploadFiles()._upload_files(file)
+
 
 @router.delete("/delete/{filename}", summary="Delete File in Excel Folder")
 def delete_files(filename):

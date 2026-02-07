@@ -1,7 +1,5 @@
 from fastapi import APIRouter, Query, Depends
-
 from services.consumption.consumer import ConsumeValues
-
 from helpers.services.consumption import DependeciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
 

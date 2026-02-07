@@ -1,11 +1,8 @@
 from fastapi import APIRouter, Query, Depends
-
 from database.queries import UpsertInfos
-
 from services.forecast.buff_al import ReturnBuffAssemblyLineValues
 from services.forecast.fx4pd import ReturnFX4PDValues
 from services.forecast.forecaster import DefineForecastValues
-
 from helpers.services.forecast import BuildPipeline, DependenciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
 
@@ -16,7 +13,7 @@ router = APIRouter()
 @router.get("/response/buffer-al", summary="Get Only Buffer Values From Assembly Line DataBase")
 def get_buffer_al_response(
     svc: ReturnBuffAssemblyLineValues = Depends(DependenciesInjection.get_buff_al_service),
-    limit: int = Query(5000, ge=1, le=100000),
+    limit: int = Query(50, ge=1, le=100000),
 ):
     try:
         df = svc.return_values_from_db().collect()
@@ -28,7 +25,7 @@ def get_buffer_al_response(
 @router.get("/response/fx4pd", summary="Get Values From FX4PD")
 def get_fx4pd_response(
     svc: ReturnFX4PDValues = Depends(DependenciesInjection.get_fx4pd_service),
-    limit: int = Query(5000, ge=1, le=100000),
+    limit: int = Query(50, ge=1, le=100000),
 ):
     try:
         df = BuildPipeline().build_forecast(svc).collect()
@@ -40,7 +37,7 @@ def get_fx4pd_response(
 @router.get("/result", summary="Get Values Forecasted")
 def get_forecast_result(
     svc: DefineForecastValues = Depends(DependenciesInjection.get_forecast_service),
-    limit: int = Query(5000, ge=1, le=100000),
+    limit: int = Query(50, ge=1, le=100000),
 ):
     try:
         df = svc.join_fx4pd_pkmc_pk05().collect()
