@@ -1,105 +1,80 @@
+from sqlalchemy import update
+from sqlalchemy.dialects.mysql import insert
+from sqlalchemy.orm import Session
+from database.database import Base
 import polars as pl
-from database.connector import MySQL_Connector
 
 
-class UpsertInfos(MySQL_Connector):
-    def __init__(self):
-        MySQL_Connector.__init__(self)
+class UpsertInfos:
+    def __init__(self, db: Session):
+        self.db = db
 
-    def upsert_df(self, table, df, batch_size):
+    def upsert_df(self, table, df: pl.DataFrame, batch_size=1000):
         if isinstance(df, pl.LazyFrame):
             df = df.collect()
 
-        total_rows = len(df)
-        for i in range(0, total_rows, batch_size):
-            batch = df.slice(i, batch_size)
-            self._upsert_batch(table, batch)
-        return total_rows
+        total = len(df)
+        rows = df.to_dicts()
 
-    def _upsert_batch(self, table, df):
-        if not table.replace("_", "").isalnum():
-            return
+        sql_table = Base.metadata.tables[table]
 
-        values = df.rows()
+        for i in range(0, total, batch_size):
+            batch = rows[i : i + batch_size]
+            self._upsert_batch(sql_table, batch)
 
-        columns = ", ".join(df.columns)
-        placeholders = ", ".join(["%s"] * len(df.columns))
-        update_clause = ", ".join([f"{col}=VALUES({col})" for col in df.columns])
+        return total
 
-        sql = f"""
-            INSERT INTO {table} ({columns})
-            VALUES ({placeholders})
-            ON DUPLICATE KEY UPDATE {update_clause};
-        """
+    def _upsert_batch(self, table, rows):
+        stmt = insert(table).values(rows)
 
-        cursor = self.connection.cursor()
-        try:
-            cursor.executemany(sql, values)
-            self.connection.commit()
-        except Exception as e:
-            self.connection.rollback()
-            raise
-        finally:
-            cursor.close()
+        update_cols = {
+            col.name: stmt.inserted[col.name]
+            for col in table.columns
+            if not col.primary_key
+        }
+
+        stmt = stmt.on_duplicate_key_update(**update_cols)
+
+        self.db.execute(stmt)
+        self.db.commit()
 
 
-class SelectInfos(MySQL_Connector):
-    def __init__(self):
-        MySQL_Connector.__init__(self)
+class SelectInfos:
+    def __init__(self, db: Session):
+        self.db = db
 
-    def select_bd_infos(self, query):
-        cursor = self.connection.cursor()
-        try:
-            cursor.execute(query)
-            rows = cursor.fetchall()
-            cols = cursor.column_names
-            return pl.DataFrame(rows, schema=cols).lazy()
-        finally:
-            cursor.close()
+    def select(self, query):
+        result = self.db.execute(query)
+        rows = result.fetchall()
+        cols = result.keys()
+        return pl.DataFrame(rows, schema=cols).lazy()
 
 
-class UpdateInfos(MySQL_Connector):
-    def __init__(self):
-        MySQL_Connector.__init__(self)
+class UpdateInfos:
+    def __init__(self, db: Session):
+        self.db = db
 
-    def update_df(self, table, df, key_column, batch_size):
+    def update_df(self, table_name, df: pl.DataFrame, key_column, batch_size=1000):
         if isinstance(df, pl.LazyFrame):
             df = df.collect()
 
-        if key_column not in df.columns:
-            raise ValueError(f"A coluna de chave '{key_column}' não existe no DataFrame")
+        table = Base.metadata.tables[table_name]
+        rows = df.to_dicts()
+        total = len(rows)
 
-        total_rows = len(df)
-        for i in range(0, total_rows, batch_size):
-            batch = df.slice(i, batch_size)
+        for i in range(0, total, batch_size):
+            batch = rows[i : i + batch_size]
             self._update_batch(table, batch, key_column)
-        return total_rows
 
-    def _update_batch(self, table, df, key_column):
-        if not table.replace("_", "").isalnum():
-            raise ValueError("Nome de tabela inválido")
+        return total
 
-        columns = [col for col in df.columns if col != key_column]
+    def _update_batch(self, table, batch, key_column):
+        for row in batch:
+            stmt = (
+                update(table)
+                .where(table.c[key_column] == row[key_column])
+                .values({k: v for k, v in row.items() if k != key_column})
+            )
+            self.db.execute(stmt)
 
-        set_clause = ", ".join([f"{col}=%s" for col in columns])
-
-        sql = f"""
-            UPDATE {table}
-            SET {set_clause}
-            WHERE {key_column} = %s
-        """
-
-        values = [
-            tuple(row[col] for col in columns) + (row[key_column],)
-            for row in df.to_dicts()
-        ]
-
-        cursor = self.connection.cursor()
-        try:
-            cursor.executemany(sql, values)
-            self.connection.commit()
-        except Exception:
-            self.connection.rollback()
-            raise
-        finally:
-            cursor.close()
+        self.db.commit()

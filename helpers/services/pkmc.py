@@ -1,5 +1,8 @@
+from fastapi import Depends
 from services.pkmc.pkmc import PKMC_Cleaner, PKMC_DefineDataframe
 from database.queries import UpsertInfos
+from database.database import get_db
+from sqlalchemy.orm import Session
 
 
 class BuildPipeline:
@@ -23,5 +26,5 @@ class DependenciesInjection:
         return PKMC_Cleaner()
     
     @staticmethod
-    def get_upsert_service() -> UpsertInfos:
-        return UpsertInfos()
+    def get_upsert_service(db: Session = Depends(get_db)) -> UpsertInfos:
+        return UpsertInfos(db)

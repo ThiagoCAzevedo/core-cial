@@ -1,6 +1,9 @@
+from fastapi import Depends
 from services.request.requester import QuantityToRequest, LM01_Requester
 from services.sap.session_manager import SAPSessionManager
 from database.queries import UpsertInfos
+from database.database import get_db
+from sqlalchemy.orm import Session
 
 
 class BuildPipeline:
@@ -19,5 +22,5 @@ class DependenciesInjection:
         return SAPSessionManager()
 
     @staticmethod
-    def get_upsert_service() -> UpsertInfos:
-        return UpsertInfos()
+    def get_upsert_service(db: Session = Depends(get_db)) -> UpsertInfos:
+        return UpsertInfos(db)
