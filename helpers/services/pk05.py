@@ -1,6 +1,7 @@
 from services.pk05.pk05 import PK05_Cleaner, PK05_DefineDataframe
 from database.queries import UpsertInfos
 
+
 class BuildPipeline:
     @staticmethod
     def build_pk05(raw_svc: PK05_DefineDataframe, cleaner_svc: PK05_Cleaner):

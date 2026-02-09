@@ -71,4 +71,3 @@ class PKMC_Cleaner(CleanerBase):
             "Posição de armazenamento": "qty_max_box",
         }
         return self._rename(df, rename_map)
-    

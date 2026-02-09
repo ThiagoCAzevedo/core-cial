@@ -52,7 +52,8 @@ class LT22_Parameters:
         self.session.findById("wnd[0]/usr/ctxtBDATU-HIGH").Text = today
 
     def set_layout(self):
-        self.session.findById("wnd[0]/usr/ctxtLISTV").Text = "/sys_knr"
+        # pattern used in SAP (known as 'variante')
+        self.session.findById("wnd[0]/usr/ctxtLISTV").Text = "/auto_line_feeding"
 
 
 class LT22_Submit:

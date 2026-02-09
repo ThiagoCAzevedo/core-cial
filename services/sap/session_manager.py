@@ -1,5 +1,3 @@
-from typing import Optional
-
 class SAPSessionManager:
     session = None
 

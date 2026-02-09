@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Query, Depends
 from services.assembly.assembly_api import AccessAssemblyLineApi
-from database.queries import UpsertInfos
 from helpers.services.assembly import BuildPipeline, DependeciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
+from database.queries import UpsertInfos
 
 
 router = APIRouter()

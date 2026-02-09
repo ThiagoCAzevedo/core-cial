@@ -33,5 +33,4 @@ class ReturnFX4PDValues(CleanerBase):
             qty_usage = pl.col("qty_usage").cast(pl.Float64, strict=False).fill_null(0.0),
             qty_unit = pl.col("qty_unit").cast(pl.Int32,  strict=False).fill_null(0),
         )
-
         return df

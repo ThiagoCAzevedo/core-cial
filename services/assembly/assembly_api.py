@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import os, requests, urllib3
 
+
 load_dotenv("config/.env")
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

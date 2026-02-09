@@ -1,5 +1,5 @@
-import polars as pl
 from typing import Union, List
+import polars as pl
 
 
 class DataLoader:
@@ -32,5 +32,4 @@ class DataLoader:
                     )
 
             loaded_data[file_path] = df
-
         return loaded_data

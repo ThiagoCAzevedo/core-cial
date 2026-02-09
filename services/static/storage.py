@@ -17,11 +17,10 @@ class UploadFiles:
         content = file.file.read()
         with open(f"{os.getenv('EXCEL_PATH')}/{file.filename}", "wb") as f:
             f.write(content)
-
         return {"filename": file.filename, "size": len(content)}
 
 
 class DeleteFiles:
     def _delete_files(self, filename):
         os.remove(os.path.join(os.getenv("EXCEL_PATH"), filename))
-        return {"message": f"Arquivo '{filename}' removido com sucesso."}
+        return {"message": f"File '{filename}' succesfully removed."}

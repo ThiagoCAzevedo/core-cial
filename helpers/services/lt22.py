@@ -23,6 +23,7 @@ class BuildPipeline:
 
         return True
 
+
 class DependenciesInjection:
     @staticmethod
     def get_sap_session() -> SAPSessionManager:

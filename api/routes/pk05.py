@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Query, Depends
-from database.queries import UpsertInfos
 from services.pk05.pk05 import PK05_Cleaner, PK05_DefineDataframe
 from helpers.services.pk05 import BuildPipeline, DependenciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
+from database.queries import UpsertInfos
 
 
 router = APIRouter()
