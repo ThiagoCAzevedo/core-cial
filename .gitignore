@@ -29,8 +29,9 @@ env/
 # --------------------------
 # Versões de migração devem ir para o Git,
 # mas arquivos gerados com estado local não.
-alembic/versions/*.pyc
-alembic/versions/__pycache__/
+/alembic/versions/*.py
+/alembic/versions/__pycache__/
+/alembic/README
 alembic.ini
 
 # --------------------------
@@ -52,6 +53,5 @@ alembic.ini
 # Arquivos de dados (Excel/SAP) ⚠️
 # Coloque aqui APENAS se esses arquivos NÃO devem ir ao repositório
 # --------------------------
-storage/excel/*.xlsx
-storage/excel/*.xls
-storage/sap/*
+/storage/excel/
+/storage/sap/
