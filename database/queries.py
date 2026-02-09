@@ -27,10 +27,12 @@ class UpsertInfos:
     def _upsert_batch(self, table, rows):
         stmt = insert(table).values(rows)
 
+        fields_to_ignore = {"created_at", "updated_at"}
+
         update_cols = {
             col.name: stmt.inserted[col.name]
             for col in table.columns
-            if not col.primary_key
+            if not col.primary_key and col.name not in fields_to_ignore
         }
 
         stmt = stmt.on_duplicate_key_update(**update_cols)

@@ -36,3 +36,4 @@ alembic.ini
 # -- STORAGE --
 /storage/excel/
 /storage/sap/
+/storage/log/

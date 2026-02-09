@@ -8,8 +8,8 @@ class PK05(Base):
     id = Column(Integer, primary_key=True, index=True)
     supply_area = Column(String(255), nullable=False)
     deposit = Column(String(255), nullable=False)
-    responsible = Column(String(255), nullable=False)
-    discharge_point = Column(String(255), nullable=False)
+    responsible = Column(String(255))
+    discharge_point = Column(String(255))
     description = Column(String(255), nullable=False)
     takt = Column(String(255), nullable=False)
     
