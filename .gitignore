@@ -1,0 +1,57 @@
+# --------------------------
+# Python
+# --------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+*.log
+
+# Virtual env
+.venv/
+venv/
+env/
+
+# Cache
+.cache/
+*.cache
+
+# --------------------------
+# FastAPI / Uvicorn
+# --------------------------
+# Arquivos temporários gerados ao rodar o app
+*.pid
+
+# --------------------------
+# Alembic
+# --------------------------
+# Versões de migração devem ir para o Git,
+# mas arquivos gerados com estado local não.
+alembic/versions/*.pyc
+alembic/versions/__pycache__/
+alembic.ini
+
+# --------------------------
+# IDEs e ferramentas
+# --------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --------------------------
+# Configuração que contém credenciais
+# --------------------------
+# (caso você use .env)
+.env
+.env.*
+
+# --------------------------
+# Arquivos de dados (Excel/SAP) ⚠️
+# Coloque aqui APENAS se esses arquivos NÃO devem ir ao repositório
+# --------------------------
+storage/excel/*.xlsx
+storage/excel/*.xls
+storage/sap/*

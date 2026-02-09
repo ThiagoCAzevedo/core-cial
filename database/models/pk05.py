@@ -4,12 +4,13 @@ from database.database import Base
 
 
 class PK05(Base):
+    __tablename__ = "pk05"
     id = Column(Integer, primary_key=True, index=True)
-    supply_area = Column(String, nullable=False)
-    deposit = Column(String, nullable=False)
-    responsible = Column(String, nullable=False)
-    discharge_point = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-    takt = Column(String, nullable=False)
+    supply_area = Column(String(255), nullable=False)
+    deposit = Column(String(255), nullable=False)
+    responsible = Column(String(255), nullable=False)
+    discharge_point = Column(String(255), nullable=False)
+    description = Column(String(255), nullable=False)
+    takt = Column(String(255), nullable=False)
     
     created_at = Column(DateTime, server_default=func.now(), nullable=False)

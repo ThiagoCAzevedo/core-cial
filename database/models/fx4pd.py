@@ -6,8 +6,8 @@ from database.database import Base
 class FX4PD(Base):
     __tablename__ = "fx4pd"
 
-    knr_fx4pd = Column(String, nullable=False, primary_key=True)
-    partnumber = Column(String, nullable=False, primary_key=True)
+    knr_fx4pd = Column(String(255), nullable=False, primary_key=True)
+    partnumber = Column(String(255), nullable=False, primary_key=True)
     qty_usage = Column(Float, nullable=False, primary_key=True)
     qty_unit = Column(Integer, nullable=False, primary_key=True)
 
