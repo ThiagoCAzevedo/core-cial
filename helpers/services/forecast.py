@@ -1,8 +1,11 @@
+from fastapi import Depends
 from services.forecast.fx4pd import ReturnFX4PDValues
 from services.forecast.buff_al import ReturnBuffAssemblyLineValues
 from services.forecast.fx4pd import ReturnFX4PDValues
 from services.forecast.forecaster import DefineForecastValues
 from database.queries import UpsertInfos
+from database.database import get_db
+from sqlalchemy.orm import Session
 
 
 class BuildPipeline:
@@ -28,5 +31,5 @@ class DependenciesInjection:
         return DefineForecastValues()
 
     @staticmethod
-    def get_upsert_service() -> UpsertInfos:
-        return UpsertInfos()
+    def get_upsert_service(db: Session = Depends(get_db)) -> UpsertInfos:
+        return UpsertInfos(db)

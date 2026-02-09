@@ -1,5 +1,8 @@
+from fastapi import Depends
 from services.pk05.pk05 import PK05_Cleaner, PK05_DefineDataframe
 from database.queries import UpsertInfos
+from database.database import get_db
+from sqlalchemy.orm import Session
 
 
 class BuildPipeline:
@@ -22,5 +25,5 @@ class DependenciesInjection:
         return PK05_Cleaner()
     
     @staticmethod
-    def get_upsert_service() -> UpsertInfos:
-        return UpsertInfos()
+    def get_upsert_service(db: Session = Depends(get_db)) -> UpsertInfos:
+        return UpsertInfos(db)

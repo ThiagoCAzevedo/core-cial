@@ -1,4 +1,7 @@
 from database.queries import SelectInfos
+from database.models.pkmc import PKMC
+from database.models.pk05 import PK05
+from sqlalchemy import select
 import polars as pl
 
 
@@ -7,16 +10,17 @@ class QuantityToRequest(SelectInfos):
         SelectInfos.__init__(self)
 
     def _define_diference_to_request(self):
-        df = self.select_bd_infos(
-                """
-                    SELECT pkmc.partnumber, pkmc.num_reg_circ, pk05.takt, pkmc.rack,
-                        pkmc.lb_balance, pkmc.total_theoretical_qty, pkmc.qty_for_restock, pkmc.qty_per_box,
-                        pkmc.qty_max_box
-                    FROM pkmc
-                    JOIN pk05 ON pk05.supply_area = pkmc.supply_area
-                    WHERE pkmc.lb_balance <= pkmc.qty_for_restock;
-                """
+        stmt = (
+            select(
+                PKMC.partnumber, PKMC.num_reg_circ, PK05.takt, PKMC.rack,
+                PKMC.lb_balance, PKMC.total_theoretical_qty, PKMC.qty_for_restock, PKMC.qty_per_box,
+                PKMC.qty_max_box,
             )
+            .join(PK05, PK05.supply_area == PKMC.supply_area)
+            .where(PKMC.lb_balance <= PKMC.qty_for_restock)
+        )
+
+        df = self.select(stmt)
         df = df.with_columns([
             (pl.col("total_theoretical_qty") - pl.col("lb_balance"))
                 .alias("qty_to_request"),
