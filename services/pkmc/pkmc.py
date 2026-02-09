@@ -1,9 +1,11 @@
 from helpers.data.cleaner import CleanerBase
+from helpers.log.logger import logger
 import polars as pl
 
 
 class PKMC_DefineDataframe(CleanerBase):
     def __init__(self):
+        logger("PKMC").info("Teste")
         CleanerBase.__init__(self)
 
     def create_df(self):
