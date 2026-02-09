@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Query, Depends
-from database.queries import UpsertInfos
 from services.pkmc.pkmc import PKMC_DefineDataframe, PKMC_Cleaner
 from helpers.services.pkmc import BuildPipeline, DependenciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
+from database.queries import UpsertInfos
 
 
 router = APIRouter()

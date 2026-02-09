@@ -3,6 +3,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import polars as pl, os
 
+
 load_dotenv("config/.env")
 
 

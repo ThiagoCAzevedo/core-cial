@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Query, Depends
-from database.queries import UpsertInfos
 from services.forecast.buff_al import ReturnBuffAssemblyLineValues
 from services.forecast.fx4pd import ReturnFX4PDValues
 from services.forecast.forecaster import DefineForecastValues
 from helpers.services.forecast import BuildPipeline, DependenciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
+from database.queries import UpsertInfos
 
 
 router = APIRouter()

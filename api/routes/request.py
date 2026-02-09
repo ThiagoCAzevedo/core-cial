@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Query, Depends
-
-from database.queries import UpsertInfos
 from services.request.requester import QuantityToRequest
 from helpers.services.request import DependenciesInjection, BuildPipeline
 from helpers.services.http_exception import HTTP_Exceptions
+from database.queries import UpsertInfos
 
 
 router = APIRouter()

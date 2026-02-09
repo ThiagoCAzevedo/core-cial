@@ -1,6 +1,4 @@
 from database.queries import SelectInfos
-from helpers.data.cleaner import CleanerBase
-import polars as pl
 
 
 class DefineForecastValues(SelectInfos):

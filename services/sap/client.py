@@ -1,8 +1,6 @@
-from typing import Optional, Tuple
+from typing import Tuple
 from dotenv import load_dotenv
-import win32com.client
-import pythoncom
-import time, os
+import win32com.client, pythoncom, time, os
 
 
 load_dotenv("config/.env")
@@ -19,11 +17,7 @@ class SAP_Launcher:
         time.sleep(5)
 
     def get_application(self):
-        try:
-            sap_gui = win32com.client.GetObject("SAPGUI")
-            return sap_gui.GetScriptingEngine
-        except:
-            return None
+        return win32com.client.GetObject("SAPGUI").GetScriptingEngine
 
 
 class SAP_SessionProvider:
