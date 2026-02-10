@@ -3,7 +3,7 @@ import os, logging
 
 
 def logger(service_name: str):
-    log_filename = f"storage/log/{service_name}.log"
+    log_filename = f"storage/log/{service_name}/{service_name}.log"
     os.makedirs(os.path.dirname(log_filename), exist_ok=True)
 
     logger = logging.getLogger(service_name)
@@ -42,7 +42,7 @@ class CustomFormatter(logging.Formatter):
     def format(self, record):
         filename = record.filename
         full_path = os.path.relpath(record.pathname).replace("\\", "/")
-        timestamp = self.formatTime(record, "%Y-%m-%d %H:%M:%S")
+        timestamp = self.formatTime(record, "%d-%m-%Y %H:%M:%S")
         return (
             f"[{record.levelname} | {filename} | {full_path} | "
             f"{self.service_name} | {timestamp}] {record.getMessage()}"
