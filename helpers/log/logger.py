@@ -17,7 +17,7 @@ def logger(service_name: str):
         filename=log_filename,
         when="midnight",
         interval=1,
-        backupCount=7,
+        backupCount=3,
         encoding="utf-8"
     )
 
