@@ -25,7 +25,6 @@ def get_json_response(api: AccessAssemblyLineApi = Depends(DependeciesInjection.
         raise HTTP_Exceptions().http_502("Erro ao buscar origem: ", e)
 
 
-
 @router.get("/response/processed", summary="Get Processed Response From Assembly Line API")
 def get_processed_response(
     api: AccessAssemblyLineApi = Depends(DependeciesInjection.get_api),
@@ -41,7 +40,6 @@ def get_processed_response(
     except Exception as e:
         log.error("Erro ao processar registros da Assembly Line API", exc_info=True)
         raise HTTP_Exceptions().http_500("Erro ao processar registros:", e)
-
 
 
 @router.post("/upsert", summary="Upsert Assembly Line Values In The DataBase")

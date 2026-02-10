@@ -4,23 +4,55 @@ from services.sap.session_manager import SAPSessionManager
 from database.queries import UpsertInfos
 from database.database import get_db
 from sqlalchemy.orm import Session
+from helpers.log.logger import logger
 
 
 class BuildPipeline:
+    def __init__(self):
+        self.log = logger("request")
+        self.log.info("Inicializando BuildPipeline de Request")
+
     @staticmethod
     def build_to_request(svc: QuantityToRequest):
-        return svc._define_diference_to_request()
-    
-    
+        log = logger("request")
+        log.info("Iniciando pipeline de cálculo de quantidade a solicitar")
+
+        try:
+            result = svc._define_diference_to_request()
+            log.info("Pipeline de cálculo finalizado com sucesso")
+            return result
+
+        except Exception:
+            log.error("Erro ao definir diferença para request", exc_info=True)
+            raise
+
+
 class DependenciesInjection:
+    log = logger("request")
+
     @staticmethod
     def get_to_request() -> QuantityToRequest:
-        return QuantityToRequest()
-    
+        DependenciesInjection.log.info("Criando serviço QuantityToRequest")
+        try:
+            return QuantityToRequest()
+        except Exception:
+            DependenciesInjection.log.error("Erro ao criar QuantityToRequest", exc_info=True)
+            raise
+
     @staticmethod
     def get_sap_session() -> SAPSessionManager:
-        return SAPSessionManager()
+        DependenciesInjection.log.info("Criando SAPSessionManager para LM01")
+        try:
+            return SAPSessionManager()
+        except Exception:
+            DependenciesInjection.log.error("Erro ao criar SAPSessionManager", exc_info=True)
+            raise
 
     @staticmethod
     def get_upsert_service(db: Session = Depends(get_db)) -> UpsertInfos:
-        return UpsertInfos(db)
+        DependenciesInjection.log.info("Criando serviço UpsertInfos para Requests")
+        try:
+            return UpsertInfos(db)
+        except Exception:
+            DependenciesInjection.log.error("Erro ao criar UpsertInfos", exc_info=True)
+            raise
