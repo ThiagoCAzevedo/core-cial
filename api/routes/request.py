@@ -4,6 +4,7 @@ from helpers.services.request import DependenciesInjection, BuildPipeline
 from helpers.services.http_exception import HTTP_Exceptions
 from database.queries import UpsertInfos
 from helpers.log.logger import logger
+import polars as pl
 
 
 router = APIRouter()
@@ -19,7 +20,7 @@ def get_to_request(
 
     try:
         df = svc._define_diference_to_request().collect()
-        log.info(f"Valores para requisição carregados — total de registros: {df.height()}")
+        log.info(f"Valores para requisição carregados — total de registros: {df.height}")
         return df.head(limit).to_dicts()
 
     except Exception as e:

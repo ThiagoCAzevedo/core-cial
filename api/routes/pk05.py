@@ -4,6 +4,7 @@ from helpers.services.pk05 import BuildPipeline, DependenciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
 from database.queries import UpsertInfos
 from helpers.log.logger import logger
+import polars as pl
 
 
 router = APIRouter()
@@ -19,7 +20,7 @@ def get_raw_pk05(
 
     try:
         df = svc.create_df().collect()
-        log.info(f"PK05 bruto carregado com sucesso — total de registros: {df.height()}")
+        log.info(f"PK05 bruto carregado com sucesso — total de registros: {df.height}")
         return df.head(limit).to_dicts()
 
     except Exception as e:
@@ -38,7 +39,7 @@ def get_clean_pk05(
 
     try:
         df = BuildPipeline.build_pk05(raw_svc, cleaner_svc).head(limit).collect()
-        log.info(f"PK05 processado com sucesso — total de registros exibidos: {df.height()}")
+        log.info(f"PK05 processado com sucesso — total de registros exibidos: {df.height}")
         return df.to_dicts()
 
     except Exception as e:
@@ -58,7 +59,7 @@ def upsert_pk05(
 
     try:
         df = BuildPipeline.build_pk05(raw_svc, cleaner_svc)
-        log.info(f"PK05 processado antes do upsert — total de registros: {df.height()}")
+        log.info(f"PK05 processado antes do upsert — total de registros: {df.select(pl.len()).collect().item()}")
 
         rows = upsert_svc.upsert_df("pk05", df, batch_size)
         log.info(f"Upsert PK05 realizado com sucesso — linhas upsertadas: {rows}")

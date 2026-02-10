@@ -4,6 +4,7 @@ from helpers.services.pkmc import BuildPipeline, DependenciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
 from database.queries import UpsertInfos
 from helpers.log.logger import logger
+import polars as pl
 
 
 router = APIRouter()
@@ -19,7 +20,7 @@ def get_raw_pkmc(
 
     try:
         df = svc.create_df().collect()
-        log.info(f"PKMC bruto carregado com sucesso — total de registros: {df.height()}")
+        log.info(f"PKMC bruto carregado com sucesso — total de registros: {df.height}")
         return df.head(limit).to_dicts()
 
     except Exception as e:
@@ -38,7 +39,7 @@ def get_clean_pkmc(
 
     try:
         df = BuildPipeline.build_pkmc(raw_svc, cleaner_svc).head(limit).collect()
-        log.info(f"PKMC processado com sucesso — registros exibidos: {df.height()}")
+        log.info(f"PKMC processado com sucesso — registros exibidos: {df.height}")
         return df.to_dicts()
 
     except Exception as e:
@@ -58,7 +59,7 @@ def upsert_pkmc(
 
     try:
         df = BuildPipeline.build_pkmc(raw_svc, cleaner_svc)
-        log.info(f"PKMC processado antes do upsert — total de registros: {df.height()}")
+        log.info(f"PKMC processado antes do upsert — total de registros: {df.select(pl.len()).collect().item()}")
 
         rows = upsert_svc.upsert_df("pkmc", df, batch_size)
         log.info(f"Upsert PKMC concluído — linhas gravadas: {rows}")

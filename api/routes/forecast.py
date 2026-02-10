@@ -6,6 +6,7 @@ from helpers.services.forecast import BuildPipeline, DependenciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
 from database.queries import UpsertInfos
 from helpers.log.logger import logger
+import polars as pl
 
 
 router = APIRouter()
@@ -21,7 +22,7 @@ def get_buffer_al_response(
 
     try:
         df = svc.return_values_from_db().collect()
-        log.info(f"Buffer AL retornado com sucesso — total de registros: {df.height()}")
+        log.info(f"Buffer AL retornado com sucesso — total de registros: {df.height}")
         return df.head(limit).to_dicts()
 
     except Exception as e:
@@ -39,7 +40,7 @@ def get_fx4pd_response(
 
     try:
         df = BuildPipeline().build_forecast(svc).collect()
-        log.info(f"FX4PD retornado com sucesso — total de registros: {df.height()}")
+        log.info(f"FX4PD retornado com sucesso — total de registros: {df.height}")
         return df.head(limit).to_dicts()
 
     except Exception as e:
@@ -57,7 +58,7 @@ def get_forecast_result(
 
     try:
         df = svc.join_fx4pd_pkmc_pk05().collect()
-        log.info(f"Forecast retornado com sucesso — total de registros: {df.height()}")
+        log.info(f"Forecast retornado com sucesso — total de registros: {df.height}")
         return df.head(limit).to_dicts()
 
     except Exception as e:
@@ -105,7 +106,7 @@ def upsert_forecast_pipeline(
     try:
         # FX4PD FIRST
         df_fx4pd = BuildPipeline().build_forecast(fx4pd_svc)
-        log.info(f"FX4PD carregado — registros: {df_fx4pd.height()}")
+        log.info(f"FX4PD carregado — registros: {df_fx4pd.select(pl.len()).collect().item()}")
 
         upsert_svc.upsert_df("fx4pd", df_fx4pd, batch_size)
         log.info("Upsert FX4PD concluído")

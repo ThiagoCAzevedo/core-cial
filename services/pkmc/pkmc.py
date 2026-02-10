@@ -5,7 +5,7 @@ import polars as pl
 
 class PKMC_DefineDataframe(CleanerBase):
     def __init__(self):
-        self.log = logger("PKMC")
+        self.log = logger("pkmc")
         self.log.info("Inicializando PKMC_DefineDataframe")
 
         CleanerBase.__init__(self)
@@ -25,7 +25,7 @@ class PKMC_DefineDataframe(CleanerBase):
 
 class PKMC_Cleaner(CleanerBase):
     def __init__(self):
-        self.log = logger("PKMC")
+        self.log = logger("pkmc")
         self.log.info("Inicializando PKMC_Cleaner")
         
         CleanerBase.__init__(self)

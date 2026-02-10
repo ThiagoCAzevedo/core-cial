@@ -33,7 +33,7 @@ def update_to_consume(
 
     try:
         df = svc.values_to_consume()
-        log.info(f"Valores de consumo carregados — total de linhas: {df.height()}")
+        log.info(f"Valores de consumo carregados — total de linhas: {df.height}")
 
         updated_rows = svc._update_infos(df=df, batch_size=batch_size)
         log.info(f"Update executado com sucesso — linhas atualizadas: {updated_rows}")

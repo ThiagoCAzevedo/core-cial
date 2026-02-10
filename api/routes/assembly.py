@@ -4,6 +4,7 @@ from helpers.services.assembly import BuildPipeline, DependeciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
 from database.queries import UpsertInfos
 from helpers.log.logger import logger
+import polars as pl
 
 
 router = APIRouter()
@@ -34,7 +35,7 @@ def get_processed_response(
 
     try:
         df = BuildPipeline().build_assembly(api)
-        log.info(f"Processamento concluído — total de registros: {df.height()}")
+        log.info(f"Processamento concluído — total de registros: {df.height}")
         return df.head(limit).to_dicts()
 
     except Exception as e:
@@ -53,7 +54,7 @@ def upsert_assembly(
 
     try:
         df = BuildPipeline().build_assembly(api)
-        log.info(f"Pipeline executado com sucesso — registros processados: {df.height()}")
+        log.info(f"Pipeline executado com sucesso — registros processados: {df.select(pl.len()).collect().item()}")
 
         rows = upsert.upsert_df("assembly_line", df, batch_size)
         log.info(f"Upsert realizado com sucesso — linhas gravadas: {rows}")
