@@ -9,7 +9,7 @@ import polars as pl
 
 class ConsumeValues(SelectInfos):
     def __init__(self, db):
-        self.log = logger("CONSUMPTION")
+        self.log = logger("consumption")
         self.log.info("Inicializando ConsumeValues")
         
         SelectInfos.__init__(self, db)
