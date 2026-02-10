@@ -1,6 +1,6 @@
 from fastapi import Depends
-from services.request.requester import QuantityToRequest, LM01_Requester
-from services.sap.session_manager import SAPSessionManager
+from services.requests_builder.requester import QuantityToRequest, LM01_Requester
+from services.sap_manager.session_manager import SAPSessionManager
 from database.queries import UpsertInfos
 from database.database import get_db
 from sqlalchemy.orm import Session
@@ -9,12 +9,12 @@ from helpers.log.logger import logger
 
 class BuildPipeline:
     def __init__(self):
-        self.log = logger("request")
+        self.log = logger("requests_builder")
         self.log.info("Inicializando BuildPipeline de Request")
 
     @staticmethod
     def build_to_request(svc: QuantityToRequest):
-        log = logger("request")
+        log = logger("requests_builder")
         log.info("Iniciando pipeline de cálculo de quantidade a solicitar")
 
         try:
@@ -28,7 +28,7 @@ class BuildPipeline:
 
 
 class DependenciesInjection:
-    log = logger("request")
+    log = logger("requests_builder")
 
     @staticmethod
     def get_to_request() -> QuantityToRequest:
@@ -37,6 +37,26 @@ class DependenciesInjection:
             return QuantityToRequest()
         except Exception:
             DependenciesInjection.log.error("Erro ao criar QuantityToRequest", exc_info=True)
+            raise
+
+    @staticmethod
+    def get_lm01_requester():
+        DependenciesInjection.log.info("Criando LM01_Requester")
+
+        try:
+            DependenciesInjection.log.info("Obtendo sessão SAP")
+            sap = SAPSessionManager().get_session()
+
+            DependenciesInjection.log.info("Calculando dataframe quantity_to_request")
+            df = QuantityToRequest()._define_diference_to_request()
+
+            requester = LM01_Requester(sap, df)
+            DependenciesInjection.log.info("LM01_Requester criado com sucesso")
+
+            return requester
+
+        except Exception:
+            DependenciesInjection.log.error("Erro ao criar LM01_Requester", exc_info=True)
             raise
 
     @staticmethod

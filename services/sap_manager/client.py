@@ -9,7 +9,7 @@ load_dotenv("config/.env")
 
 class SAP_Launcher:
     def __init__(self):
-        self.log = logger("sap")
+        self.log = logger("sap_manager")
         self.log.info("Inicializando SAP_Launcher")
 
         try:
@@ -48,7 +48,7 @@ class SAP_Launcher:
 
 class SAP_SessionProvider:
     def __init__(self, launcher: SAP_Launcher):
-        self.log = logger("sap")
+        self.log = logger("sap_manager")
         self.log.info("Inicializando SAP_SessionProvider")
 
         self.launcher = launcher
@@ -93,7 +93,7 @@ class SAP_SessionProvider:
 
 class SAP_Authenticator:
     def __init__(self):
-        self.log = logger("sap")
+        self.log = logger("sap_manager")
         self.log.info("Inicializando SAP_Authenticator")
 
         self.user = os.getenv("SAP_USER")
@@ -116,7 +116,7 @@ class SAP_Authenticator:
             
 class SAP_Client:
     def __init__(self, session_provider: SAP_SessionProvider, authenticator: SAP_Authenticator, launcher: SAP_Launcher):
-        self.log = logger("sap")
+        self.log = logger("sap_manager")
         self.log.info("Inicializando SAP_Client")
 
         self.session_provider = session_provider

@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends
-from helpers.services.lt22 import LT22_Session, BuildPipeline, DependenciesInjection
+from helpers.services.requests_checker import LT22_Session, LT22_BuildPipeline, DependenciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
 from helpers.log.logger import logger
 
 
 router = APIRouter()
-log = logger("sap")
+log = logger("requests_checker")
 
 
 @router.post("/request")
@@ -18,7 +18,7 @@ def lt22_request(
         session = svc.open()
         log.info("Sessão LT22 aberta com sucesso — iniciando pipeline")
         
-        BuildPipeline.request(session)
+        LT22_BuildPipeline.request(session)
         log.info("Pipeline LT22 executado com sucesso")
 
         return {"message": "LT22 executado com sucesso."}

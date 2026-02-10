@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query, Depends
-from services.pkmc.pkmc import PKMC_DefineDataframe, PKMC_Cleaner
-from helpers.services.pkmc import BuildPipeline, DependenciesInjection
+from services.static.pkmc import PKMC_DefineDataframe, PKMC_Cleaner
+from helpers.services.static import PKMC_BuildPipeline, DependenciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
 from database.queries import UpsertInfos
 from helpers.log.logger import logger
@@ -38,7 +38,7 @@ def get_clean_pkmc(
     log.info(f"Rota /response/processed chamada — limit={limit}")
 
     try:
-        df = BuildPipeline.build_pkmc(raw_svc, cleaner_svc).head(limit).collect()
+        df = PKMC_BuildPipeline.build_pkmc(raw_svc, cleaner_svc).head(limit).collect()
         log.info(f"PKMC processado com sucesso — registros exibidos: {df.height}")
         return df.to_dicts()
 
@@ -58,7 +58,7 @@ def upsert_pkmc(
     log.info(f"Rota POST /upsert chamada — batch_size={batch_size}")
 
     try:
-        df = BuildPipeline.build_pkmc(raw_svc, cleaner_svc)
+        df = PKMC_BuildPipeline.build_pkmc(raw_svc, cleaner_svc)
         log.info(f"PKMC processado antes do upsert — total de registros: {df.select(pl.len()).collect().item()}")
 
         rows = upsert_svc.upsert_df("pkmc", df, batch_size)

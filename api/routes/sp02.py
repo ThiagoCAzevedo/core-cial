@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends
 from services.requests_checker.sp02 import SP02_Session, SP02_Actions
-from helpers.services.sp02 import BuildPipeline, DependenciesInjection
+from helpers.services.requests_checker import SP02_BuildPipeline, DependenciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
 from helpers.log.logger import logger
 
 
 router = APIRouter()
-log = logger("sap")
+log = logger("requests_checker")
 
 
 @router.get("/find-registry", summary="Find LT22 Registry Inside SP02")
@@ -19,7 +19,7 @@ def sp02_find_lt22(
         session = svc.sap.get_session()
         log.info("Sessão SAP recuperada no SessionManager")
 
-        job = BuildPipeline.find_lt22(session)
+        job = SP02_BuildPipeline.find_lt22(session)
 
         log.info(f"Busca concluída — encontrado={job is not None}")
         return {"found": job is not None, "job": job}
