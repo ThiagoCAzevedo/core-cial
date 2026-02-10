@@ -91,7 +91,6 @@ class SAP_SessionProvider:
             raise
 
 
-
 class SAP_Authenticator:
     def __init__(self):
         self.log = logger("sap")
@@ -114,8 +113,7 @@ class SAP_Authenticator:
             self.log.error("Erro durante login no SAP", exc_info=True)
             raise
 
-
-
+            
 class SAP_Client:
     def __init__(self, session_provider: SAP_SessionProvider, authenticator: SAP_Authenticator, launcher: SAP_Launcher):
         self.log = logger("sap")
