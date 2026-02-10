@@ -8,12 +8,12 @@ from helpers.log.logger import logger
 
 class BuildPipeline:
     def __init__(self):
-        self.log = logger("pkmc")
+        self.log = logger("static")
         self.log.info("Inicializando BuildPipeline PKMC")
 
     @staticmethod
     def build_pkmc(raw_svc: PKMC_DefineDataframe, cleaner_svc: PKMC_Cleaner):
-        log = logger("pkmc")
+        log = logger("static")
         log.info("Iniciando pipeline PKMC")
 
         try:
@@ -56,7 +56,7 @@ class BuildPipeline:
 
 
 class DependenciesInjection:
-    log = logger("pkmc")
+    log = logger("static")
 
     @staticmethod
     def get_pkmc() -> PKMC_DefineDataframe:

@@ -8,7 +8,7 @@ import polars as pl
 
 
 router = APIRouter()
-log = logger("pkmc")
+log = logger("static")
 
 
 @router.get("/response/raw", summary="Get Raw PKMC Values")

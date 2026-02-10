@@ -30,7 +30,6 @@ def get_buffer_al_response(
         raise HTTP_Exceptions().http_502("Erro ao buscar origem (buff_al): ", e)
 
 
-
 @router.get("/response/fx4pd", summary="Get Values From FX4PD")
 def get_fx4pd_response(
     svc: ReturnFX4PDValues = Depends(DependenciesInjection.get_fx4pd_service),
@@ -48,7 +47,6 @@ def get_fx4pd_response(
         raise HTTP_Exceptions().http_502("Erro ao buscar origem (fx4pd)", e)
 
 
-
 @router.get("/result", summary="Get Values Forecasted")
 def get_forecast_result(
     svc: DefineForecastValues = Depends(DependenciesInjection.get_forecast_service),
@@ -64,7 +62,6 @@ def get_forecast_result(
     except Exception as e:
         log.error("Erro ao buscar origem (forecast)", exc_info=True)
         raise HTTP_Exceptions().http_502("Erro ao buscar origem (forecast)", e)
-
 
 
 @router.post("/upsert/fx4pd", summary="Upsert FX4PD Values In The DataBase")
@@ -91,7 +88,6 @@ def upsert_fx4pd(
     except Exception as e:
         log.error("Erro no upsert (fx4pd)", exc_info=True)
         raise HTTP_Exceptions().http_500("Erro no upsert (fx4pd)", e)
-
 
 
 @router.post("/upsert", summary="Upsert Forecasted Values In The DataBase")

@@ -8,7 +8,7 @@ import polars as pl
 
 
 router = APIRouter()
-log = logger("pk05")
+log = logger("static")
 
 
 @router.get("/response/raw", summary="Get Raw PK05 Values")
@@ -28,7 +28,6 @@ def get_raw_pk05(
         raise HTTP_Exceptions().http_502("Erro ao buscar PK05 bruto: ", e)
 
 
-
 @router.get("/response/processed", summary="Get Cleaned PK05 Values")
 def get_clean_pk05(
     raw_svc: PK05_DefineDataframe = Depends(DependenciesInjection.get_pk05),
@@ -45,7 +44,6 @@ def get_clean_pk05(
     except Exception as e:
         log.error("Erro ao processar PK05 (clean)", exc_info=True)
         raise HTTP_Exceptions().http_502("Erro ao processar PK05 (clean): ", e)
-
 
 
 @router.post("/upsert", summary="Upsert PK05 Values In The DataBase")

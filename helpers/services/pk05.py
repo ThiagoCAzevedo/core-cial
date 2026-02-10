@@ -8,12 +8,12 @@ from helpers.log.logger import logger
 
 class BuildPipeline:
     def __init__(self):
-        self.log = logger("pk05")
+        self.log = logger("static")
         self.log.info("Inicializando BuildPipeline PK05")
 
     @staticmethod
     def build_pk05(raw_svc: PK05_DefineDataframe, cleaner_svc: PK05_Cleaner):
-        log = logger("pk05")
+        log = logger("static")
         log.info("Iniciando pipeline PK05")
 
         try:
@@ -49,7 +49,7 @@ class BuildPipeline:
 
 
 class DependenciesInjection:
-    log = logger("pk05")
+    log = logger("static")
 
     @staticmethod
     def get_pk05() -> PK05_DefineDataframe:

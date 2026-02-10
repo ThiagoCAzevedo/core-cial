@@ -23,7 +23,6 @@ def get_to_consume_response(svc: ConsumeValues = Depends(DependeciesInjection.ge
         raise HTTP_Exceptions().http_502("Erro ao buscar origem: ", e)
 
 
-
 @router.put("/update/to-consume", summary="Update Values To Consume")
 def update_to_consume(
     batch_size: int = Query(10_000, ge=1, le=100_000),

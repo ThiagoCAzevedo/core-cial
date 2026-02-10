@@ -28,7 +28,6 @@ def lt22_request(
         raise HTTP_Exceptions().http_500("Erro ao executar LT22", e)
 
 
-
 @router.post("/open")
 def lt22_open(
     svc: LT22_Session = Depends(DependenciesInjection.get_lt22_session)
