@@ -3,9 +3,12 @@ from services.request.requester import QuantityToRequest
 from helpers.services.request import DependenciesInjection, BuildPipeline
 from helpers.services.http_exception import HTTP_Exceptions
 from database.queries import UpsertInfos
+from helpers.log.logger import logger
+import polars as pl
 
 
 router = APIRouter()
+log = logger("request")
 
 
 @router.get("/response/to-request", summary="Get Values To Request")
@@ -13,12 +16,17 @@ def get_to_request(
     svc: QuantityToRequest = Depends(DependenciesInjection.get_to_request),
     limit: int = Query(50, ge=1, le=1000),
 ):
+    log.info(f"Rota /response/to-request chamada — limit={limit}")
+
     try:
         df = svc._define_diference_to_request().collect()
+        log.info(f"Valores para requisição carregados — total de registros: {df.height}")
         return df.head(limit).to_dicts()
 
     except Exception as e:
+        log.error("Erro ao buscar valores para solicitar", exc_info=True)
         raise HTTP_Exceptions().http_502("Erro ao buscar valores para solicitar: ", e)
+
 
 
 @router.post("/upsert/to-request", summary="Upsert To Request Values In The DataBase")
@@ -27,9 +35,14 @@ def upsert_to_request(
     svc: QuantityToRequest = Depends(DependenciesInjection.get_to_request),
     upsert_svc: UpsertInfos = Depends(DependenciesInjection.get_upsert_service),
 ):
+    log.info(f"Rota /upsert/to-request chamada — batch_size={batch_size}")
+
     try:
         df = BuildPipeline.build_to_request(svc)
+        log.info(f"Valores processados — total de registros: {len(df)}")
+
         rows = upsert_svc.upsert_df("requests_made", df, batch_size)
+        log.info(f"Upsert concluído — linhas gravadas: {rows}")
 
         return {
             "message": "Upsert To Request concluído com sucesso.",
@@ -39,4 +52,5 @@ def upsert_to_request(
         }
 
     except Exception as e:
+        log.error("Erro no upsert (to request)", exc_info=True)
         raise HTTP_Exceptions().http_500("Erro no upsert (to request)", e)
