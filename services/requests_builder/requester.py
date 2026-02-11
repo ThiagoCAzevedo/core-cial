@@ -4,35 +4,35 @@ from helpers.log.logger import logger
 class LM01_Requester:
     def __init__(self, sap, df):
         self.log = logger("request")
-        self.log.info("Inicializando LM01_Requester")
+        self.log.info("Initializing LM01_Requester")
 
         self.sap = sap
 
         try:
             self.df = df.collect()
-            self.log.info(f"DataFrame carregado no LM01_Requester — total de linhas: {self.df.height()}")
+            self.log.info(f"DataFrame loaded into LM01_Requester — total rows: {self.df.height()}")
 
         except Exception:
-            self.log.error("Erro ao coletar DataFrame em LM01_Requester", exc_info=True)
+            self.log.error("Error collecting DataFrame in LM01_Requester", exc_info=True)
             raise
 
 
     def _request_lm01(self):
-        self.log.info("Iniciando processo de requisição SAP LM01")
+        self.log.info("Starting SAP LM01 request process")
 
         try:
             session, _ = self.sap.run_transaction("/nLM01")
-            self.log.info("Sessão SAP LM01 iniciada com sucesso")
+            self.log.info("SAP LM01 session started successfully")
 
         except Exception:
-            self.log.error("Erro ao iniciar transação SAP /nLM01", exc_info=True)
+            self.log.error("Error starting SAP transaction /nLM01", exc_info=True)
             raise
 
         try:
             session.findById("wnd[0]/usr/txtGV_OT").setFocus()
             session.findById("wnd[0]/usr/btnTEXT1").press()
         except Exception:
-            self.log.error("Erro ao preparar interface SAP LM01", exc_info=True)
+            self.log.error("Error preparing SAP LM01 interface", exc_info=True)
             raise
 
         rows_requested = 0
@@ -42,7 +42,7 @@ class LM01_Requester:
                 qtd_caixas = int(row["qty_boxes_to_request"])
                 num_circ = str(row["num_reg_circ"])
 
-                self.log.info(f"Processando partnumber={row['partnumber']} | caixas={qtd_caixas}")
+                self.log.info(f"Processing partnumber={row['partnumber']} | boxes={qtd_caixas}")
 
                 for _ in range(qtd_caixas):
                     rows_requested += 1
@@ -55,13 +55,13 @@ class LM01_Requester:
                         session.findById("wnd[0]/usr/btnBTOK").press()
 
                     except Exception:
-                        self.log.error(f"Erro ao solicitar caixa para num_reg_circ={num_circ}", exc_info=True)
+                        self.log.error(f"Error requesting box for num_reg_circ={num_circ}", exc_info=True)
                         raise
 
-            self.log.info(f"Processo LM01 finalizado — total de linhas solicitadas: {rows_requested}")
+            self.log.info(f"LM01 process completed — total requested rows: {rows_requested}")
 
         except Exception:
-            self.log.error("Erro no loop de requisições LM01", exc_info=True)
+            self.log.error("Error in LM01 request loop", exc_info=True)
             raise
 
         return rows_requested

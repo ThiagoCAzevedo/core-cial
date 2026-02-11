@@ -5,17 +5,17 @@ from helpers.log.logger import logger
 class DefineDataFrame:
     def __init__(self, response: dict):
         self.log = logger("assembly")
-        self.log.info("Inicializando DefineDataFrame")
+        self.log.info("Initializing DefineDataFrame")
 
         try:
             self.response = response
-            self.log.info("Response recebido para processamento")
+            self.log.info("Response received for processing")
         except Exception:
-            self.log.error("Erro ao inicializar response em DefineDataFrame", exc_info=True)
+            self.log.error("Error initializing response in DefineDataFrame", exc_info=True)
             raise
 
     def extract_car_records(self, cleaned):
-        self.log.info("Iniciando extração de registros CAR")
+        self.log.info("Starting CAR record extraction")
 
         try:
             registers = []
@@ -39,30 +39,31 @@ class DefineDataFrame:
 
             df = pl.DataFrame(registers)
 
-            self.log.info(f"Total de registros CAR extraídos: {df.height()}")
+            self.log.info(f"Total CAR records extracted: {df.height()}")
 
             return df
 
         except Exception:
-            self.log.error("Erro ao extrair registros CAR do JSON limpo", exc_info=True)
+            self.log.error("Error extracting CAR records from cleaned JSON", exc_info=True)
             raise
-    
 
 
 class TransformDataFrame:
     def __init__(self, df):
         self.log = logger("assembly")
-        self.log.info("Inicializando TransformDataFrame")
+        self.log.info("Initializing TransformDataFrame")
 
         try:
             self.df = df
-            self.log.info(f"DataFrame recebido — linhas: {df.height()}, colunas: {len(df.columns)}")
+            self.log.info(
+                f"DataFrame received — rows: {df.height()}, columns: {len(df.columns)}"
+            )
         except Exception:
-            self.log.error("Erro ao inicializar DataFrame em TransformDataFrame", exc_info=True)
+            self.log.error("Error initializing DataFrame in TransformDataFrame", exc_info=True)
             raise
 
     def transform(self):
-        self.log.info("Aplicando transformações (replace lane_, casting lfdnr_sequence)")
+        self.log.info("Applying transformations (remove lane_ prefix, cast lfdnr_sequence)")
 
         try:
             df = (
@@ -73,24 +74,30 @@ class TransformDataFrame:
                 ])
             )
 
-            self.log.info("Transformação concluída com sucesso")
+            self.log.info("Transformation completed successfully")
             return df
 
         except Exception:
-            self.log.error("Erro ao transformar DataFrame em TransformDataFrame.transform()", exc_info=True)
+            self.log.error(
+                "Error transforming DataFrame in TransformDataFrame.transform()",
+                exc_info=True
+            )
             raise
     
     def attach_fx4pd(self):
-        self.log.info("Criando coluna knr_fx4pd")
+        self.log.info("Creating column knr_fx4pd")
 
         try:
             df = self.df.with_columns(
                 (pl.col("werk") + pl.col("spj") + pl.col("knr")).alias("knr_fx4pd")
             )
 
-            self.log.info("Coluna knr_fx4pd criada com sucesso")
+            self.log.info("Column knr_fx4pd created successfully")
             return df
 
         except Exception:
-            self.log.error("Erro ao criar coluna knr_fx4pd em TransformDataFrame.attach_fx4pd()", exc_info=True)
+            self.log.error(
+                "Error creating knr_fx4pd column in TransformDataFrame.attach_fx4pd()",
+                exc_info=True
+            )
             raise
