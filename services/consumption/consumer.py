@@ -7,16 +7,18 @@ from helpers.log.logger import logger
 import polars as pl
     
 
-class ConsumeValues(SelectInfos):
+class ConsumeValues:
     def __init__(self, db):
+        self.db = db
         self.log = logger("consumption")
+        self.selector = SelectInfos(db)
+        self.updater = UpdateInfos(db)
+
         self.log.info("Initializing ConsumeValues")
-        
-        SelectInfos.__init__(self, db)
 
     def values_to_consume(self):
         self.log.info("Building query to retrieve consumption values (Forecast x Assembly x PKMC)")
-        
+
         try:
             stmt = (
                 select(
@@ -46,7 +48,7 @@ class ConsumeValues(SelectInfos):
             raise
 
         try:
-            df = self.select(stmt)
+            df = self.selector.select(stmt)
             self.log.info(f"Select completed — records returned: {df.height()}")
 
         except Exception:
@@ -55,6 +57,7 @@ class ConsumeValues(SelectInfos):
 
         try:
             self.log.info("Calculating updated lb_balance based on qty_usage")
+
             df = (
                 df.with_columns(
                     (pl.col("lb_balance") - pl.col("qty_usage").fill_null(0))
@@ -63,6 +66,7 @@ class ConsumeValues(SelectInfos):
                 .select(["partnumber", "lb_balance"])
                 .collect()
             )
+
             self.log.info("Calculation completed — final DataFrame prepared")
 
         except Exception:
@@ -71,13 +75,11 @@ class ConsumeValues(SelectInfos):
 
         return df
 
-    def _update_infos(self, df, batch_size):
+    def _update_infos(self, df: pl.DataFrame, batch_size: int):
         self.log.info(f"Starting update on PKMC table for {df.height()} records")
 
         try:
-            update = UpdateInfos(self.db)
-
-            update.update_df(
+            self.updater.update_df(
                 table_name="pkmc",
                 df=df,
                 key_column="partnumber",
