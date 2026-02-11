@@ -19,7 +19,7 @@ class QuantityToRequest(SelectInfos):
         try:
             stmt = (
                 select(
-                    PKMC.partnumber, PKMC.num_reg_circ, PK05.takt, PKMC.rack,
+                    PKMC.partnumber, PKMC.supply_area, PKMC.num_reg_circ, PK05.takt, PKMC.rack,
                     PKMC.lb_balance, PKMC.total_theoretical_qty, PKMC.qty_for_restock, PKMC.qty_per_box,
                     PKMC.qty_max_box,
                 )

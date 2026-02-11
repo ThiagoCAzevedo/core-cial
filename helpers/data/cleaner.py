@@ -35,7 +35,6 @@ class CleanerBase:
 
     def _get_path(self, env_key: str) -> Path:
         self.log.info(f"Buscando path a partir da env '{env_key}'")
-
         try:
             env_value = os.getenv(env_key)
             if not env_value:
@@ -50,12 +49,12 @@ class CleanerBase:
             self.log.error("Erro ao montar path a partir da variável de ambiente", exc_info=True)
             raise
 
-    def _load_file(self, env_key):
+    def _load_file(self, env_key, rows_to_skip=0, separator="\t"):
         self.log.info(f"Carregando arquivo definido na env '{env_key}'")
 
         try:
             path = self._get_path(env_key)
-            data_map = DataLoader(path).load_data()
+            data_map = DataLoader(path).load_data(rows_to_skip, separator)
 
             if path not in data_map:
                 self.log.error(f"Arquivo {path} não encontrado no data_map retornado")
