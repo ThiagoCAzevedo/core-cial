@@ -34,7 +34,6 @@ class QuantityToRequest:
             .where(PKMC.lb_balance <= PKMC.qty_for_restock)
         )
 
-        # Agora chamamos select com SELECT complexo
         df = self.selector.select(stmt)
 
         df = df.with_columns([

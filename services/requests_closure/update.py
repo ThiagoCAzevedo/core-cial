@@ -1,5 +1,4 @@
 from database.queries import SelectInfos, UpdateInfos, DeleteInfos
-from .values_to_query import ValuesToQuery
 import polars as pl
 
 
@@ -21,7 +20,7 @@ class ValuesToQuery:
             ]
         )
 
-        return df.collect()   # retorna um DataFrame polars
+        return df.collect()
 
     def join_lt22_requests_made(self, df_lt22: pl.DataFrame):
         df_requests = self._return_requests_made_values()
