@@ -4,8 +4,7 @@ from .consumption import router as consumption_router
 from .files import router as static_files_router
 from .pkmc import router as pkmc_router
 from .pk05 import router as pk05_router
-from .pk05 import router as pk05_router
-from .request import router as request_router
-from .sap import router as sap_router
-from .sp02 import router as sp02_router
-from .lt22 import router as lt22_router
+from .sap_manager import router as sap_router
+from .requests_builder import router as requests_builder_router
+from .requests_checker import router as requests_checker_router
+from .requests_closure import router as requests_closure_router

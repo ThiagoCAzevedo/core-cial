@@ -3,7 +3,7 @@ from helpers.log.logger import logger
 
 class SAPSessionManager:
     session = None
-    log = logger("sap")
+    log = logger("sap_manager")
 
     @classmethod
     def set_session(cls, sess):

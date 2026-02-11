@@ -1,15 +1,54 @@
 from fastapi import APIRouter, Depends
+from helpers.services.requests_checker import LT22_BuildPipeline, SP02_BuildPipeline, DependenciesInjection
+from services.requests_checker.lt22 import LT22_Session
 from services.requests_checker.sp02 import SP02_Session, SP02_Actions
-from helpers.services.sp02 import BuildPipeline, DependenciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
 from helpers.log.logger import logger
 
 
 router = APIRouter()
-log = logger("sap")
+log = logger("requests_checker")
+
+# -- LT22 --
+@router.post("/lt22/request")
+def lt22_request(
+    svc: LT22_Session = Depends(DependenciesInjection.get_lt22_session)
+):
+    log.info("Rota POST /request chamada — iniciando execução LT22")
+
+    try:
+        session = svc.open()
+        log.info("Sessão LT22 aberta com sucesso — iniciando pipeline")
+        
+        LT22_BuildPipeline.request(session)
+        log.info("Pipeline LT22 executado com sucesso")
+
+        return {"message": "LT22 executado com sucesso."}
+
+    except Exception as e:
+        log.error("Erro ao executar processo completo de LT22", exc_info=True)
+        raise HTTP_Exceptions().http_500("Erro ao executar LT22", e)
 
 
-@router.get("/find-registry", summary="Find LT22 Registry Inside SP02")
+@router.post("/lt22/open")
+def lt22_open(
+    svc: LT22_Session = Depends(DependenciesInjection.get_lt22_session)
+):
+    log.info("Rota POST /open chamada — abrindo sessão LT22")
+
+    try:
+        svc.open()
+        log.info("Sessão LT22 aberta com sucesso")
+
+        return {"message": "LT22 aberta com sucesso."}
+
+    except Exception as e:
+        log.error("Erro ao abrir LT22", exc_info=True)
+        raise HTTP_Exceptions().http_500("Erro ao abrir LT22", e)
+    
+
+# -- SP02 --
+@router.get("/sp02/find-registry", summary="Find LT22 Registry Inside SP02")
 def sp02_find_lt22(
     svc: SP02_Session = Depends(DependenciesInjection.get_sp02_session)
 ):
@@ -19,7 +58,7 @@ def sp02_find_lt22(
         session = svc.sap.get_session()
         log.info("Sessão SAP recuperada no SessionManager")
 
-        job = BuildPipeline.find_lt22(session)
+        job = SP02_BuildPipeline.find_lt22(session)
 
         log.info(f"Busca concluída — encontrado={job is not None}")
         return {"found": job is not None, "job": job}
@@ -30,7 +69,7 @@ def sp02_find_lt22(
 
 
 
-@router.post("/open-registry", summary="Open SP02 Registry")
+@router.post("/sp02/open-registry", summary="Open SP02 Registry")
 def sp02_open(
     svc: SP02_Session = Depends(DependenciesInjection.get_sp02_session)
 ):
@@ -47,7 +86,7 @@ def sp02_open(
     
 
 
-@router.post("/download-registry", summary="Download Output From SP02 Registry")
+@router.post("/sp02/download-registry", summary="Download Output From SP02 Registry")
 def sp02_download(
     index: int,
     svc: SP02_Actions = Depends(DependenciesInjection.get_sp02_actions)
@@ -69,7 +108,7 @@ def sp02_download(
     
 
 
-@router.delete("/clean-registry", summary="Delete LT22 Registry From SP02")
+@router.delete("/sp02/clean-registry", summary="Delete LT22 Registry From SP02")
 def sp02_clean(
     index: int,
     svc: SP02_Actions = Depends(DependenciesInjection.get_sp02_actions)

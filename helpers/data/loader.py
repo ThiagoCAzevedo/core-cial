@@ -27,7 +27,7 @@ class DataLoader:
             self.log.error("Erro ao obter extensão do arquivo", exc_info=True)
             raise
 
-    def load_data(self):
+    def load_data(self, rows_to_skip, separator):
         loaded_data = {}
         self.log.info("Iniciando carregamento de dados")
 
@@ -57,6 +57,8 @@ class DataLoader:
                         truncate_ragged_lines=True,
                         encoding="utf8-lossy",
                         has_header=True,
+                        skip_rows = rows_to_skip,
+                        separator = separator
                     ).collect()
                     self.log.info(f"Arquivo CSV/TXT carregado: {file_path}")
 

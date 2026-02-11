@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Query, Depends
-from services.request.requester import QuantityToRequest
-from helpers.services.request import DependenciesInjection, BuildPipeline
+from services.requests_builder.requester import LM01_Requester
+from services.requests_builder.to_request import QuantityToRequest
+from helpers.services.requests_builder import DependenciesInjection, BuildPipeline
 from helpers.services.http_exception import HTTP_Exceptions
 from database.queries import UpsertInfos
 from helpers.log.logger import logger
-import polars as pl
 
 
 router = APIRouter()
-log = logger("request")
+log = logger("requests_builder")
 
 
 @router.get("/response/to-request", summary="Get Values To Request")
@@ -54,3 +54,34 @@ def upsert_to_request(
     except Exception as e:
         log.error("Erro no upsert (to request)", exc_info=True)
         raise HTTP_Exceptions().http_500("Erro no upsert (to request)", e)
+    
+
+@router.post("/requester", summary="Requester To Request Values In SAP")
+def requester(
+    svc: LM01_Requester = Depends(DependenciesInjection.get_lm01_requester),
+    sap = Depends(DependenciesInjection.get_sap_session)
+):
+    log.info("Rota POST /requester chamada — iniciando execução do requester SAP")
+
+    try:
+        session = sap.get_session()
+        log.info("Sessão SAP recuperada do SessionManager")
+
+        if not session:
+            log.error("Nenhuma sessão SAP ativa encontrada")
+            raise HTTP_Exceptions().http_400(
+                "Nenhuma sessão SAP ativa.",
+                "Antes de usar este endpoint, execute /sap/session para abrir uma sessão SAP."
+            )
+
+        rows = svc._request_lm01()
+        log.info(f"Requester SAP executado — total de linhas processadas: {rows}")
+
+        return {
+            "message": "Requester concluído com sucesso.",
+            "rows": rows,
+        }
+
+    except Exception as e:
+        log.error("Erro no request (to request)", exc_info=True)
+        raise HTTP_Exceptions().http_500("Erro no request (to request)", e)
