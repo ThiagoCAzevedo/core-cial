@@ -11,20 +11,20 @@ from helpers.log.logger import logger
 class BuildPipeline:
     def __init__(self):
         self.log = logger("requests_builder")
-        self.log.info("Inicializando BuildPipeline de Request")
+        self.log.info("Initializing Request BuildPipeline")
 
     @staticmethod
     def build_to_request(svc: QuantityToRequest):
         log = logger("requests_builder")
-        log.info("Iniciando pipeline de cálculo de quantidade a solicitar")
+        log.info("Starting pipeline to calculate quantities to request")
 
         try:
             result = svc._define_diference_to_request()
-            log.info("Pipeline de cálculo finalizado com sucesso")
+            log.info("Quantity-to-request pipeline completed successfully")
             return result
 
         except Exception:
-            log.error("Erro ao definir diferença para request", exc_info=True)
+            log.error("Error defining request difference", exc_info=True)
             raise
 
 
@@ -33,47 +33,47 @@ class DependenciesInjection:
 
     @staticmethod
     def get_to_request() -> QuantityToRequest:
-        DependenciesInjection.log.info("Criando serviço QuantityToRequest")
+        DependenciesInjection.log.info("Creating QuantityToRequest service")
         try:
             return QuantityToRequest()
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar QuantityToRequest", exc_info=True)
+            DependenciesInjection.log.error("Error creating QuantityToRequest", exc_info=True)
             raise
 
     @staticmethod
     def get_lm01_requester():
-        DependenciesInjection.log.info("Criando LM01_Requester")
+        DependenciesInjection.log.info("Creating LM01_Requester")
 
         try:
-            DependenciesInjection.log.info("Obtendo sessão SAP")
+            DependenciesInjection.log.info("Retrieving SAP session")
             sap = SAPSessionManager().get_session()
 
-            DependenciesInjection.log.info("Calculando dataframe quantity_to_request")
+            DependenciesInjection.log.info("Calculating quantity_to_request DataFrame")
             df = QuantityToRequest()._define_diference_to_request()
 
             requester = LM01_Requester(sap, df)
-            DependenciesInjection.log.info("LM01_Requester criado com sucesso")
+            DependenciesInjection.log.info("LM01_Requester created successfully")
 
             return requester
 
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar LM01_Requester", exc_info=True)
+            DependenciesInjection.log.error("Error creating LM01_Requester", exc_info=True)
             raise
 
     @staticmethod
     def get_sap_session() -> SAPSessionManager:
-        DependenciesInjection.log.info("Criando SAPSessionManager para LM01")
+        DependenciesInjection.log.info("Creating SAPSessionManager for LM01")
         try:
             return SAPSessionManager()
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar SAPSessionManager", exc_info=True)
+            DependenciesInjection.log.error("Error creating SAPSessionManager", exc_info=True)
             raise
 
     @staticmethod
     def get_upsert_service(db: Session = Depends(get_db)) -> UpsertInfos:
-        DependenciesInjection.log.info("Criando serviço UpsertInfos para Requests")
+        DependenciesInjection.log.info("Creating UpsertInfos service for Requests")
         try:
             return UpsertInfos(db)
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar UpsertInfos", exc_info=True)
+            DependenciesInjection.log.error("Error creating UpsertInfos service", exc_info=True)
             raise

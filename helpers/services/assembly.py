@@ -10,56 +10,56 @@ from helpers.log.logger import logger
 class BuildPipeline:
     def __init__(self):
         self.log = logger("assembly")
-        self.log.info("Inicializando BuildPipeline")
+        self.log.info("Initializing BuildPipeline")
 
     def build_assembly(self, api: AccessAssemblyLineApi):
-        self.log.info("Iniciando pipeline de montagem de dataframe")
+        self.log.info("Starting DataFrame assembly pipeline")
 
         try:
-            self.log.info("Obtendo dados brutos da API de assembly line")
+            self.log.info("Retrieving raw assembly line API data")
             raw = api.get_raw_response()
-            self.log.info("Dados brutos obtidos com sucesso")
+            self.log.info("Raw data retrieved successfully")
 
         except Exception:
-            self.log.error("Erro ao obter dados brutos da API", exc_info=True)
+            self.log.error("Error retrieving raw API data", exc_info=True)
             raise
 
         try:
-            self.log.info("Extraindo registros de carro")
+            self.log.info("Extracting car records")
             df = DefineDataFrame(raw).extract_car_records()
-            self.log.info("Extração concluída")
+            self.log.info("Record extraction completed")
 
         except Exception:
-            self.log.error("Erro ao extrair registros", exc_info=True)
+            self.log.error("Error extracting car records", exc_info=True)
             raise
 
         try:
-            self.log.info("Transformando dataframe base")
+            self.log.info("Transforming base DataFrame")
             df = TransformDataFrame(df).transform()
-            self.log.info("Transformação concluída")
+            self.log.info("Base transformation completed")
 
         except Exception:
-            self.log.error("Erro na transformação inicial do dataframe", exc_info=True)
+            self.log.error("Error during initial DataFrame transformation", exc_info=True)
             raise
 
         try:
-            self.log.info("Atribuindo FX4PD ao dataframe")
+            self.log.info("Attaching FX4PD values to DataFrame")
             df = TransformDataFrame(df).attach_fx4pd()
-            self.log.info("Atribuição FX4PD concluída")
+            self.log.info("FX4PD attachment completed")
 
         except Exception:
-            self.log.error("Erro ao atribuir FX4PD", exc_info=True)
+            self.log.error("Error attaching FX4PD", exc_info=True)
             raise
 
         try:
-            self.log.info("Coletando dataframe final")
+            self.log.info("Collecting final DataFrame")
             final_df = df.collect()
-            self.log.info("Pipeline assembly finalizado com sucesso")
+            self.log.info("Assembly pipeline finished successfully")
 
             return final_df
 
         except Exception:
-            self.log.error("Erro ao coletar dataframe final", exc_info=True)
+            self.log.error("Error collecting final DataFrame", exc_info=True)
             raise
 
 
@@ -68,18 +68,18 @@ class DependeciesInjection:
 
     @staticmethod
     def get_api() -> AccessAssemblyLineApi:
-        DependeciesInjection.log.info("Criando instância de AccessAssemblyLineApi")
+        DependeciesInjection.log.info("Creating instance of AccessAssemblyLineApi")
         try:
             return AccessAssemblyLineApi()
         except Exception:
-            DependeciesInjection.log.error("Erro ao criar AccessAssemblyLineApi", exc_info=True)
+            DependeciesInjection.log.error("Error creating AccessAssemblyLineApi instance", exc_info=True)
             raise
 
     @staticmethod
     def get_upsert(db: Session = Depends(get_db)) -> UpsertInfos:
-        DependeciesInjection.log.info("Criando UpsertInfos com sessão de banco")
+        DependeciesInjection.log.info("Creating UpsertInfos with DB session")
         try:
             return UpsertInfos(db)
         except Exception:
-            DependeciesInjection.log.error("Erro ao criar UpsertInfos", exc_info=True)
+            DependeciesInjection.log.error("Error creating UpsertInfos instance", exc_info=True)
             raise

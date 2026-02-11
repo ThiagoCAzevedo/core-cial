@@ -8,24 +8,24 @@ from helpers.log.logger import logger
 class SP02_BuildPipeline:
     def __init__(self):
         self.log = logger("requests_checker")
-        self.log.info("Inicializando BuildPipeline SP02")
+        self.log.info("Initializing SP02 BuildPipeline")
 
     @staticmethod
     def find_lt22(session):
         log = logger("requests_checker")
-        log.info("Iniciando busca por LT22 no SP02")
+        log.info("Starting LT22 search in SP02")
 
         try:
             rows = SP02_Rows(session)
-            log.info("Instância SP02_Rows criada")
+            log.info("SP02_Rows instance created")
 
             result = rows.find_lt22_job()
-            log.info("Busca por LT22 concluída com sucesso")
+            log.info("LT22 search completed successfully")
 
             return result
 
         except Exception:
-            log.error("Erro ao buscar job LT22 no SP02", exc_info=True)
+            log.error("Error searching for LT22 job in SP02", exc_info=True)
             raise
 
 
@@ -33,48 +33,48 @@ class SP02_BuildPipeline:
 class LT22_BuildPipeline:
     def __init__(self):
         self.log = logger("requests_checker")
-        self.log.info("Inicializando BuildPipeline LT22")
+        self.log.info("Initializing LT22 BuildPipeline")
 
     @staticmethod
     def request(session):
         log = logger("requests_checker")
-        log.info("Iniciando pipeline LT22")
+        log.info("Starting LT22 pipeline")
 
         try:
-            log.info("Executando seletores LT22")
+            log.info("Executing LT22 selectors")
             selectors = LT22_Selectors(session)
             selectors.expand()
             selectors.select()
             selectors.top()
             selectors.take()
-            log.info("Seletores concluídos")
+            log.info("LT22 selectors completed")
 
         except Exception:
-            log.error("Erro ao executar seletores LT22", exc_info=True)
+            log.error("Error executing LT22 selectors", exc_info=True)
             raise
 
         try:
-            log.info("Configurando parâmetros LT22")
+            log.info("Configuring LT22 parameters")
             params = LT22_Parameters(session)
             params.set_deposit()
             params.set_b01()
             params.set_pending_only()
             params.set_dates_today()
             params.set_layout()
-            log.info("Parâmetros LT22 configurados")
+            log.info("LT22 parameters configured")
 
         except Exception:
-            log.error("Erro ao configurar parâmetros LT22", exc_info=True)
+            log.error("Error configuring LT22 parameters", exc_info=True)
             raise
 
         try:
-            log.info("Submetendo requisição LT22")
+            log.info("Submitting LT22 request")
             submit = LT22_Submit(session)
             submit.submit()
-            log.info("Requisição LT22 submetida com sucesso")
+            log.info("LT22 request submitted successfully")
 
         except Exception:
-            log.error("Erro ao submeter requisição LT22", exc_info=True)
+            log.error("Error submitting LT22 request", exc_info=True)
             raise
 
         return True
@@ -85,38 +85,38 @@ class DependenciesInjection:
 
     @staticmethod
     def get_sap_session() -> SAPSessionManager:
-        DependenciesInjection.log.info("Criando SAPSessionManager para SP02")
+        DependenciesInjection.log.info("Creating SAPSessionManager for SP02")
         try:
             return SAPSessionManager()
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar SAPSessionManager", exc_info=True)
+            DependenciesInjection.log.error("Error creating SAPSessionManager", exc_info=True)
             raise
         
     # -- SP02 --
     @staticmethod
     def get_sp02_session() -> SP02_Session:
-        DependenciesInjection.log.info("Criando SP02_Session")
+        DependenciesInjection.log.info("Creating SP02_Session")
         try:
             return SP02_Session()
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar SP02_Session", exc_info=True)
+            DependenciesInjection.log.error("Error creating SP02_Session", exc_info=True)
             raise
 
     @staticmethod
     def get_sp02_actions() -> SP02_Actions:
-        DependenciesInjection.log.info("Criando SP02_Actions")
+        DependenciesInjection.log.info("Creating SP02_Actions")
         try:
             return SP02_Actions()
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar SP02_Actions", exc_info=True)
+            DependenciesInjection.log.error("Error creating SP02_Actions", exc_info=True)
             raise
 
     # -- LT22 --
     @staticmethod
     def get_lt22_session() -> LT22_Session:
-        DependenciesInjection.log.info("Criando LT22_Session")
+        DependenciesInjection.log.info("Creating LT22_Session")
         try:
             return LT22_Session()
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar LT22_Session", exc_info=True)
+            DependenciesInjection.log.error("Error creating LT22_Session", exc_info=True)
             raise

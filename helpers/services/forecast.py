@@ -11,33 +11,33 @@ from helpers.log.logger import logger
 class BuildPipeline:
     def __init__(self):
         self.log = logger("forecast")
-        self.log.info("Inicializando BuildPipeline de Forecast")
+        self.log.info("Initializing Forecast BuildPipeline")
 
     @staticmethod
     def build_forecast(svc: ReturnFX4PDValues):
         log = logger("forecast")
-        log.info("Iniciando pipeline de preparação do Forecast")
+        log.info("Starting Forecast preparation pipeline")
 
         try:
-            log.info("Criando DataFrame FX4PD")
+            log.info("Creating FX4PD DataFrame")
             df = svc.create_fx4pd_df()
         except Exception:
-            log.error("Erro ao criar DataFrame FX4PD", exc_info=True)
+            log.error("Error creating FX4PD DataFrame", exc_info=True)
             raise
 
         try:
-            log.info("Renomeando colunas selecionadas")
+            log.info("Renaming selected columns")
             df = svc.rename_select_columns(df)
         except Exception:
-            log.error("Erro ao renomear colunas", exc_info=True)
+            log.error("Error renaming FX4PD columns", exc_info=True)
             raise
 
         try:
-            log.info("Limpando colunas do DataFrame")
+            log.info("Cleaning FX4PD DataFrame columns")
             df = svc.clean_column(df)
-            log.info("Pipeline de Forecast concluído com sucesso")
+            log.info("Forecast pipeline completed successfully")
         except Exception:
-            log.error("Erro ao limpar colunas do DataFrame", exc_info=True)
+            log.error("Error cleaning FX4PD DataFrame columns", exc_info=True)
             raise
 
         return df
@@ -48,36 +48,36 @@ class DependenciesInjection:
 
     @staticmethod
     def get_fx4pd_service() -> ReturnFX4PDValues:
-        DependenciesInjection.log.info("Criando serviço ReturnFX4PDValues")
+        DependenciesInjection.log.info("Creating service ReturnFX4PDValues")
         try:
             return ReturnFX4PDValues()
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar ReturnFX4PDValues", exc_info=True)
+            DependenciesInjection.log.error("Error creating ReturnFX4PDValues service", exc_info=True)
             raise
 
     @staticmethod
     def get_buff_al_service() -> ReturnBuffAssemblyLineValues:
-        DependenciesInjection.log.info("Criando serviço ReturnBuffAssemblyLineValues")
+        DependenciesInjection.log.info("Creating service ReturnBuffAssemblyLineValues")
         try:
             return ReturnBuffAssemblyLineValues()
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar ReturnBuffAssemblyLineValues", exc_info=True)
+            DependenciesInjection.log.error("Error creating ReturnBuffAssemblyLineValues service", exc_info=True)
             raise
 
     @staticmethod
     def get_forecast_service() -> DefineForecastValues:
-        DependenciesInjection.log.info("Criando serviço DefineForecastValues")
+        DependenciesInjection.log.info("Creating service DefineForecastValues")
         try:
             return DefineForecastValues()
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar DefineForecastValues", exc_info=True)
+            DependenciesInjection.log.error("Error creating DefineForecastValues service", exc_info=True)
             raise
 
     @staticmethod
     def get_upsert_service(db: Session = Depends(get_db)) -> UpsertInfos:
-        DependenciesInjection.log.info("Criando UpsertInfos com sessão do banco")
+        DependenciesInjection.log.info("Creating UpsertInfos with active DB session")
         try:
             return UpsertInfos(db)
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar UpsertInfos", exc_info=True)
+            DependenciesInjection.log.error("Error creating UpsertInfos service", exc_info=True)
             raise
