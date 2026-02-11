@@ -1,33 +1,31 @@
-from database.queries import SelectInfos
-from database.models.pkmc import PKMC
-from database.models.requests_made import RequestsMade
-from sqlalchemy import select, update, delete
+from database.queries import SelectInfos, UpdateInfos, DeleteInfos
 import polars as pl
 
 
-class ValuesToQuery(SelectInfos):
-    def __init__(self):
-        super().__init__()
+class ValuesToQuery:
+    def __init__(self, session):
+        self.session = session
+        self.selector = SelectInfos(session)
 
     def _return_requests_made_values(self):
-        stmt = (
-            select(
-                RequestsMade.partnumber,
-                RequestsMade.supply_area,
-                RequestsMade.num_reg_circ,
-                RequestsMade.qty_to_request,
-                RequestsMade.takt,
-                RequestsMade.rack,
-            )
+        df = self.selector.select(
+            table="requests_made",
+            columns=[
+                "partnumber",
+                "supply_area",
+                "num_reg_circ",
+                "qty_to_request",
+                "takt",
+                "rack",
+            ]
         )
 
-        result = self.session.execute(stmt).all()
-        return pl.DataFrame([dict(r._mapping) for r in result])
+        return df.collect()
 
     def join_lt22_requests_made(self, df_lt22: pl.DataFrame):
-        df_requests_made = self._return_requests_made_values()
+        df_requests = self._return_requests_made_values()
 
-        return df_requests_made.join(
+        return df_requests.join(
             df_lt22,
             on=["partnumber", "supply_area"],
             how="inner"
@@ -37,9 +35,12 @@ class ValuesToQuery(SelectInfos):
 class UpdateDeleteValues:
     def __init__(self, session):
         self.session = session
+        self.updater = UpdateInfos(session)
+        self.deleter = DeleteInfos(session)
 
     def update_lb_balance(self, df_lt22):
-        df_join = ValuesToQuery().join_lt22_requests_made(df_lt22)
+        vtq = ValuesToQuery(self.session)
+        df_join = vtq.join_lt22_requests_made(df_lt22)
 
         df_totals = (
             df_join.lazy()
@@ -48,27 +49,18 @@ class UpdateDeleteValues:
             .collect()
         )
 
-        for row in df_totals.iter_rows(named=True):
-            stmt = (
-                update(PKMC)
-                .where(
-                    PKMC.partnumber == row["partnumber"],
-                    PKMC.supply_area == row["supply_area"],
-                )
-                .values(lb_balance=PKMC.lb_balance + row["qty_to_request"])
-            )
-            self.session.execute(stmt)
-
-        self.session.commit()
+        self.updater.update_df(
+            table_name="pkmc",
+            df=df_totals,
+            key_column="partnumber"
+        )
 
     def delete_requests_made(self, df_lt22):
-        df_join = ValuesToQuery().join_lt22_requests_made(df_lt22)
+        vtq = ValuesToQuery(self.session)
+        df_join = vtq.join_lt22_requests_made(df_lt22)
 
-        for row in df_join.iter_rows(named=True):
-            stmt = (
-                delete(RequestsMade)
-                .where(RequestsMade.partnumber == row["partnumber"])
-            )
-            self.session.execute(stmt)
-
-        self.session.commit()
+        self.deleter.delete_df(
+            table_name="requests_made",
+            df=df_join,
+            key_column="partnumber"
+        )
