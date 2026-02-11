@@ -7,12 +7,12 @@ from helpers.log.logger import logger
 class ReturnBuffAssemblyLineValues(SelectInfos):
     def __init__(self):
         self.log = logger("forecast")
-        self.log.info("Inicializando ReturnBuffAssemblyLineValues")
+        self.log.info("Initializing ReturnBuffAssemblyLineValues")
 
         SelectInfos.__init__(self)
 
     def return_values_from_db(self):
-        self.log.info("Montando query para retornar valores da linha de montagem (reception)")
+        self.log.info("Building query to return assembly line values (reception)")
 
         try:
             stmt = (
@@ -25,17 +25,17 @@ class ReturnBuffAssemblyLineValues(SelectInfos):
                     Assembly.lane == "reception"
                 )
             )
-            self.log.info("Query SQL montada com sucesso")
+            self.log.info("SQL query successfully built")
 
         except Exception:
-            self.log.error("Erro ao montar query SQL em return_values_from_db", exc_info=True)
+            self.log.error("Error building SQL query in return_values_from_db", exc_info=True)
             raise
 
         try:
             df = self.select(stmt)
-            self.log.info(f"Select concluído — registros retornados: {df.height()}")
+            self.log.info(f"Select completed — records returned: {df.height()}")
             return df
 
         except Exception:
-            self.log.error("Erro ao executar SELECT da linha de montagem", exc_info=True)
+            self.log.error("Error executing SELECT for assembly line", exc_info=True)
             raise

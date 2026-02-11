@@ -10,114 +10,118 @@ load_dotenv("config/.env")
 class SAP_Launcher:
     def __init__(self):
         self.log = logger("sap_manager")
-        self.log.info("Inicializando SAP_Launcher")
+        self.log.info("Initializing SAP_Launcher")
 
         try:
             self.sap_path = os.getenv("SAP_PATH")
-            self.log.info(f"SAP_PATH carregado: {self.sap_path}")
+            self.log.info(f"SAP_PATH loaded: {self.sap_path}")
         except Exception:
-            self.log.error("Erro ao carregar SAP_PATH do .env", exc_info=True)
+            self.log.error("Error loading SAP_PATH from .env", exc_info=True)
             raise
 
     def start(self):
-        self.log.info("Iniciando cliente SAP GUI")
+        self.log.info("Starting SAP GUI client")
 
         try:
             path = self.sap_path.strip('"')
             shell = win32com.client.Dispatch("WScript.Shell")
             shell.Run(f'"{path}"')
             time.sleep(5)
-            self.log.info("SAP GUI iniciado com sucesso")
+            self.log.info("SAP GUI started successfully")
 
         except Exception:
-            self.log.error("Erro ao iniciar SAP GUI", exc_info=True)
+            self.log.error("Error starting SAP GUI", exc_info=True)
             raise
 
     def get_application(self):
-        self.log.info("Obtendo instância SAPGUI -> Scripting Engine")
+        self.log.info("Retrieving SAPGUI → Scripting Engine instance")
 
         try:
             app = win32com.client.GetObject("SAPGUI").GetScriptingEngine
             return app
 
         except Exception:
-            self.log.error("Erro ao obter SAPGUI ScriptingEngine", exc_info=True)
+            self.log.error("Error getting SAPGUI ScriptingEngine", exc_info=True)
             raise
-
 
 
 class SAP_SessionProvider:
     def __init__(self, launcher: SAP_Launcher):
         self.log = logger("sap_manager")
-        self.log.info("Inicializando SAP_SessionProvider")
+        self.log.info("Initializing SAP_SessionProvider")
 
         self.launcher = launcher
         self.connection_name = os.getenv("SAP_CONNECTION_NAME")
 
     def get_existing_session(self):
-        self.log.info("Procurando sessão SAP já existente")
+        self.log.info("Searching for an existing SAP session")
 
         try:
             app = self.launcher.get_application()
             if not app:
-                self.log.info("Nenhuma instância SAPGUI ativa encontrada")
+                self.log.info("No active SAPGUI instance found")
                 return None
 
             if app.Children.Count > 0:
                 conn = app.Children(0)
                 if conn.Children.Count > 0:
-                    self.log.info("Sessão SAP existente encontrada")
+                    self.log.info("Existing SAP session found")
                     return conn.Children(0)
 
-            self.log.info("Nenhuma sessão SAP existente encontrada")
+            self.log.info("No existing SAP session found")
             return None
 
         except Exception:
-            self.log.error("Erro ao tentar recuperar sessão SAP existente", exc_info=True)
+            self.log.error("Error retrieving existing SAP session", exc_info=True)
             raise
 
     def open_new_session(self):
-        self.log.info("Abrindo nova sessão SAP")
+        self.log.info("Opening new SAP session")
 
         try:
             app = self.launcher.get_application()
             conn = app.OpenConnection(self.connection_name, True)
             session = conn.Children(0)
-            self.log.info("Nova sessão SAP criada com sucesso")
+            self.log.info("New SAP session created successfully")
             return session
 
         except Exception:
-            self.log.error("Erro ao abrir nova conexão SAP", exc_info=True)
+            self.log.error("Error opening new SAP connection", exc_info=True)
             raise
 
 
 class SAP_Authenticator:
     def __init__(self):
         self.log = logger("sap_manager")
-        self.log.info("Inicializando SAP_Authenticator")
+        self.log.info("Initializing SAP_Authenticator")
 
         self.user = os.getenv("SAP_USER")
         self.password = os.getenv("SAP_PSWD")
 
     def login(self, session):
-        self.log.info("Realizando login no SAP")
+        self.log.info("Performing SAP login")
 
         try:
             session.findById("wnd[0]/usr/txtRSYST-BNAME").Text = self.user
             session.findById("wnd[0]/usr/pwdRSYST-BCODE").Text = self.password
             session.findById("wnd[0]").sendVKey(0)
 
-            self.log.info("Login SAP enviado com sucesso")
+            self.log.info("SAP login submitted successfully")
 
         except Exception:
-            self.log.error("Erro durante login no SAP", exc_info=True)
+            self.log.error("Error during SAP login", exc_info=True)
             raise
 
-            
+
 class SAP_Client:
-    def __init__(self, session_provider: SAP_SessionProvider, authenticator: SAP_Authenticator, launcher: SAP_Launcher):
+    def __init__(
+        self,
+        session_provider: SAP_SessionProvider,
+        authenticator: SAP_Authenticator,
+        launcher: SAP_Launcher,
+    ):
         self.log = logger("sap_manager")
-        self.log.info("Inicializando SAP_Client")
+        self.log.info("Initializing SAP_Client")
 
         self.session_provider = session_provider
         self.authenticator = authenticator
@@ -126,7 +130,7 @@ class SAP_Client:
         self.already_opened = False
 
     def connect(self):
-        self.log.info("Conectando ao SAP...")
+        self.log.info("Connecting to SAP...")
 
         try:
             pythoncom.CoInitialize()
@@ -135,24 +139,24 @@ class SAP_Client:
             if sess:
                 self.session = sess
                 self.already_opened = True
-                self.log.info("Conectado a sessão SAP existente")
+                self.log.info("Connected to existing SAP session")
                 return self.session
 
-            self.log.info("Nenhuma sessão ativa — iniciando nova instância SAP")
+            self.log.info("No active session found — launching new SAP instance")
             self.launcher.start()
             self.session = self.session_provider.open_new_session()
 
             self.authenticator.login(self.session)
-            self.log.info("Conexão SAP estabelecida com sucesso")
+            self.log.info("SAP connection established successfully")
 
             return self.session
 
         except Exception:
-            self.log.error("Erro ao conectar no SAP", exc_info=True)
+            self.log.error("Error connecting to SAP", exc_info=True)
             raise
 
     def run_transaction(self, tcode: str = "/n") -> Tuple[object, bool]:
-        self.log.info(f"Executando transação SAP: {tcode}")
+        self.log.info(f"Executing SAP transaction: {tcode}")
 
         try:
             if not self.session:
@@ -161,10 +165,9 @@ class SAP_Client:
             self.session.findById("wnd[0]/tbar[0]/okcd").Text = tcode
             self.session.findById("wnd[0]").sendVKey(0)
 
-            self.log.info(f"Transação {tcode} executada com sucesso")
+            self.log.info(f"Transaction {tcode} executed successfully")
 
             return self.session, self.already_opened
 
         except Exception:
-            self.log.error(f"Erro ao executar transação SAP: {tcode}", exc_info=True)
-            raise
+            self.log.error(f"Error executing SAP transaction: {tcode}", exc_info=True)

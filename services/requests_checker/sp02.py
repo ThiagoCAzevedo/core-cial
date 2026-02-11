@@ -6,28 +6,27 @@ import os
 class SP02_Session:
     def __init__(self, sap):
         self.log = logger("sap")
-        self.log.info("Inicializando SP02_Session")
+        self.log.info("Initializing SP02_Session")
 
         self.sap = sap
 
     def open(self):
-        self.log.info("Abrindo transação /nSP02 no SAP")
+        self.log.info("Opening SAP transaction /nSP02")
 
         try:
             session, _ = self.sap.run_transaction("/nSP02")
-            self.log.info("Sessão SP02 aberta com sucesso")
+            self.log.info("SP02 session opened successfully")
             return session
 
         except Exception:
-            self.log.error("Erro ao abrir transação /nSP02", exc_info=True)
+            self.log.error("Error opening SAP transaction /nSP02", exc_info=True)
             raise
-
 
 
 class SP02_Rows:
     def __init__(self, session):
         self.log = logger("sap")
-        self.log.info("Inicializando SP02_Rows")
+        self.log.info("Initializing SP02_Rows")
 
         self.session = session
 
@@ -44,27 +43,27 @@ class SP02_Rows:
                 return self.session.findById(element_id).Text
             return ""
         except Exception:
-            self.log.error(f"Erro ao obter texto do elemento {element_id}", exc_info=True)
+            self.log.error(f"Error retrieving text from element {element_id}", exc_info=True)
             return ""
 
     def first_valid_row(self) -> int:
-        self.log.info("Buscando primeira linha válida em SP02")
+        self.log.info("Searching for first valid row in SP02")
 
         try:
             i = 0
             while True:
                 el = f"wnd[0]/usr/lbl[51,{i}]"
                 if self.exists(el) and self.text(el).strip() != "":
-                    self.log.info(f"Primeira linha válida encontrada: {i}")
+                    self.log.info(f"First valid row found: {i}")
                     return i
                 i += 1
 
         except Exception:
-            self.log.error("Erro ao buscar primeira linha válida em SP02", exc_info=True)
+            self.log.error("Error searching for first valid row in SP02", exc_info=True)
             raise
 
     def iter_rows(self, start: int):
-        self.log.info(f"Iterando linhas da SP02 a partir de {start}")
+        self.log.info(f"Iterating SP02 rows starting from {start}")
 
         try:
             i = start
@@ -76,11 +75,11 @@ class SP02_Rows:
                 i += 1
 
         except Exception:
-            self.log.error("Erro ao iterar linhas em SP02", exc_info=True)
+            self.log.error("Error iterating rows in SP02", exc_info=True)
             raise
 
     def find_lt22_job(self):
-        self.log.info("Procurando job LT22 dentro da listagem SP02")
+        self.log.info("Searching for LT22 job inside SP02 listing")
 
         try:
             start = self.first_valid_row()
@@ -89,29 +88,28 @@ class SP02_Rows:
                 hour = self.text(f"wnd[0]/usr/lbl[30,{i}]")
 
                 if "lt22" in name:
-                    self.log.info(f"Job LT22 encontrado na linha {i}")
+                    self.log.info(f"LT22 job found on row {i}")
                     return {"index": i, "name": name, "hour": hour}
 
-            self.log.info("Nenhum job LT22 encontrado na SP02")
+            self.log.info("No LT22 job found in SP02")
             return None
 
         except Exception:
-            self.log.error("Erro ao procurar job LT22 em SP02", exc_info=True)
+            self.log.error("Error searching for LT22 job in SP02", exc_info=True)
             raise
-
 
 
 class SP02_Actions:
     def __init__(self, sap):
         self.log = logger("sap")
-        self.log.info("Inicializando SP02_Actions")
+        self.log.info("Initializing SP02_Actions")
 
         self.sap = sap
         self.path = Path(os.getenv("SAP_PATH")).resolve()
         self.filename = "alf_lt22"
 
     def download(self, session, index: int):
-        self.log.info(f"Iniciando download do job LT22 — linha {index}")
+        self.log.info(f"Starting LT22 job download — row {index}")
 
         try:
             session.findById(f"wnd[0]/usr/chk[1,{index}]").Selected = False
@@ -123,14 +121,14 @@ class SP02_Actions:
             session.findById("wnd[1]/usr/ctxtDY_FILENAME").Text = str(self.filename)
             session.findById("wnd[1]/tbar[0]/btn[11]").press()
 
-            self.log.info(f"Download concluído e salvo em: {self.path}/{self.filename}")
+            self.log.info(f"Download completed and saved to: {self.path}/{self.filename}")
 
         except Exception:
-            self.log.error(f"Erro ao fazer download do job na linha {index}", exc_info=True)
+            self.log.error(f"Error downloading job at row {index}", exc_info=True)
             raise
 
     def clean(self, index: int):
-        self.log.info(f"Limpando job LT22 na linha {index}")
+        self.log.info(f"Cleaning LT22 job at row {index}")
 
         try:
             session, _ = self.sap.run_transaction("/nsp02")
@@ -138,8 +136,8 @@ class SP02_Actions:
             session.findById("wnd[0]/tbar[1]/btn[14]").press()
             session.findById("wnd[1]/usr/btnSPOP-OPTION1").press()
 
-            self.log.info(f"Job LT22 removido com sucesso na linha {index}")
+            self.log.info(f"LT22 job successfully removed at row {index}")
 
         except Exception:
-            self.log.error(f"Erro ao limpar job LT22 na linha {index}", exc_info=True)
+            self.log.error(f"Error cleaning LT22 job at row {index}", exc_info=True)
             raise

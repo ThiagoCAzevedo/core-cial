@@ -11,40 +11,40 @@ from helpers.log.logger import logger
 class PK05_BuildPipeline:
     def __init__(self):
         self.log = logger("static")
-        self.log.info("Inicializando BuildPipeline PK05")
+        self.log.info("Initializing PK05 BuildPipeline")
 
     @staticmethod
     def build_pk05(raw_svc: PK05_DefineDataframe, cleaner_svc: PK05_Cleaner):
         log = logger("static")
-        log.info("Iniciando pipeline PK05")
+        log.info("Starting PK05 pipeline")
 
         try:
-            log.info("Criando dataframe bruto PK05")
+            log.info("Creating raw PK05 DataFrame")
             df = raw_svc.create_df()
         except Exception:
-            log.error("Erro ao criar dataframe bruto PK05", exc_info=True)
+            log.error("Error creating raw PK05 DataFrame", exc_info=True)
             raise
 
         try:
-            log.info("Renomeando colunas do PK05")
+            log.info("Renaming PK05 columns")
             df = cleaner_svc.rename_columns(df)
         except Exception:
-            log.error("Erro ao renomear colunas no PK05", exc_info=True)
+            log.error("Error renaming PK05 columns", exc_info=True)
             raise
 
         try:
-            log.info("Criando colunas adicionais para PK05")
+            log.info("Creating additional PK05 columns")
             df = cleaner_svc.create_columns(df)
         except Exception:
-            log.error("Erro ao criar colunas adicionais no PK05", exc_info=True)
+            log.error("Error creating additional PK05 columns", exc_info=True)
             raise
 
         try:
-            log.info("Filtrando colunas do PK05")
+            log.info("Filtering PK05 rows")
             df = cleaner_svc.filter_columns(df)
-            log.info("Pipeline PK05 finalizado com sucesso")
+            log.info("PK05 pipeline completed successfully")
         except Exception:
-            log.error("Erro ao filtrar colunas do PK05", exc_info=True)
+            log.error("Error filtering PK05 rows", exc_info=True)
             raise
 
         return df
@@ -54,47 +54,47 @@ class PK05_BuildPipeline:
 class PKMC_BuildPipeline:
     def __init__(self):
         self.log = logger("static")
-        self.log.info("Inicializando BuildPipeline PKMC")
+        self.log.info("Initializing PKMC BuildPipeline")
 
     @staticmethod
     def build_pkmc(raw_svc: PKMC_DefineDataframe, cleaner_svc: PKMC_Cleaner):
         log = logger("static")
-        log.info("Iniciando pipeline PKMC")
+        log.info("Starting PKMC pipeline")
 
         try:
-            log.info("Criando dataframe bruto PKMC")
+            log.info("Creating raw PKMC DataFrame")
             df = raw_svc.create_df()
         except Exception:
-            log.error("Erro ao criar dataframe bruto PKMC", exc_info=True)
+            log.error("Error creating raw PKMC DataFrame", exc_info=True)
             raise
 
         try:
-            log.info("Renomeando colunas PKMC")
+            log.info("Renaming PKMC columns")
             df = cleaner_svc.rename_columns(df)
         except Exception:
-            log.error("Erro ao renomear colunas PKMC", exc_info=True)
+            log.error("Error renaming PKMC columns", exc_info=True)
             raise
 
         try:
-            log.info("Filtrando colunas PKMC")
+            log.info("Filtering PKMC rows")
             df = cleaner_svc.filter_columns(df)
         except Exception:
-            log.error("Erro ao filtrar colunas PKMC", exc_info=True)
+            log.error("Error filtering PKMC rows", exc_info=True)
             raise
 
         try:
-            log.info("Limpando colunas PKMC")
+            log.info("Cleaning PKMC columns")
             df = cleaner_svc.clean_columns(df)
         except Exception:
-            log.error("Erro ao limpar colunas PKMC", exc_info=True)
+            log.error("Error cleaning PKMC columns", exc_info=True)
             raise
 
         try:
-            log.info("Criando colunas adicionais PKMC")
+            log.info("Creating additional PKMC columns")
             df = cleaner_svc.create_columns(df)
-            log.info("Pipeline PKMC finalizado com sucesso")
+            log.info("PKMC pipeline completed successfully")
         except Exception:
-            log.error("Erro ao criar colunas adicionais PKMC", exc_info=True)
+            log.error("Error creating additional PKMC columns", exc_info=True)
             raise
 
         return df
@@ -102,51 +102,50 @@ class PKMC_BuildPipeline:
 
 class DependenciesInjection:
     log = logger("static")
-    
+
     # -- PK05 --
     @staticmethod
     def get_pk05() -> PK05_DefineDataframe:
-        DependenciesInjection.log.info("Criando serviço PK05_DefineDataframe")
+        DependenciesInjection.log.info("Creating PK05_DefineDataframe service")
         try:
             return PK05_DefineDataframe()
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar PK05_DefineDataframe", exc_info=True)
+            DependenciesInjection.log.error("Error creating PK05_DefineDataframe service", exc_info=True)
             raise
 
     @staticmethod
     def get_pk05_cleaner() -> PK05_Cleaner:
-        DependenciesInjection.log.info("Criando serviço PK05_Cleaner")
+        DependenciesInjection.log.info("Creating PK05_Cleaner service")
         try:
             return PK05_Cleaner()
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar PK05_Cleaner", exc_info=True)
+            DependenciesInjection.log.error("Error creating PK05_Cleaner service", exc_info=True)
             raise
 
     # -- PKMC --
     @staticmethod
     def get_pkmc() -> PKMC_DefineDataframe:
-        DependenciesInjection.log.info("Criando serviço PKMC_DefineDataframe")
+        DependenciesInjection.log.info("Creating PKMC_DefineDataframe service")
         try:
             return PKMC_DefineDataframe()
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar PKMC_DefineDataframe", exc_info=True)
+            DependenciesInjection.log.error("Error creating PKMC_DefineDataframe service", exc_info=True)
             raise
 
     @staticmethod
     def get_pkmc_cleaner() -> PKMC_Cleaner:
-        DependenciesInjection.log.info("Criando serviço PKMC_Cleaner")
+        DependenciesInjection.log.info("Creating PKMC_Cleaner service")
         try:
             return PKMC_Cleaner()
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar PKMC_Cleaner", exc_info=True)
+            DependenciesInjection.log.error("Error creating PKMC_Cleaner service", exc_info=True)
             raise
-
 
     @staticmethod
     def get_upsert_service(db: Session = Depends(get_db)) -> UpsertInfos:
-        DependenciesInjection.log.info("Criando serviço UpsertInfos para PK05")
+        DependenciesInjection.log.info("Creating UpsertInfos service for static data")
         try:
             return UpsertInfos(db)
         except Exception:
-            DependenciesInjection.log.error("Erro ao criar UpsertInfos", exc_info=True)
+            DependenciesInjection.log.error("Error creating UpsertInfos service", exc_info=True)
             raise

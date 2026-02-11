@@ -10,13 +10,13 @@ class DependeciesInjection:
 
     @staticmethod
     def get_consume(db: Session = Depends(get_db)) -> ConsumeValues:
-        DependeciesInjection.log.info("Criando instância de ConsumeValues")
+        DependeciesInjection.log.info("Creating instance of ConsumeValues")
 
         try:
             service = ConsumeValues(db)
-            DependeciesInjection.log.info("Instância de ConsumeValues criada com sucesso")
+            DependeciesInjection.log.info("ConsumeValues instance created successfully")
             return service
 
         except Exception:
-            DependeciesInjection.log.error("Erro ao criar instância de ConsumeValues", exc_info=True)
+            DependeciesInjection.log.error("Error creating ConsumeValues instance", exc_info=True)
             raise

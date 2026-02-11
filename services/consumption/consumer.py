@@ -10,12 +10,12 @@ import polars as pl
 class ConsumeValues(SelectInfos):
     def __init__(self, db):
         self.log = logger("consumption")
-        self.log.info("Inicializando ConsumeValues")
+        self.log.info("Initializing ConsumeValues")
         
         SelectInfos.__init__(self, db)
 
     def values_to_consume(self):
-        self.log.info("Montando query para obter valores de consumo (Forecast x Assembly x PKMC)")
+        self.log.info("Building query to retrieve consumption values (Forecast x Assembly x PKMC)")
         
         try:
             stmt = (
@@ -39,22 +39,22 @@ class ConsumeValues(SelectInfos):
                     PKMC.partnumber == Forecast.partnumber
                 )
             )
-            self.log.info("Query SQL montada com sucesso")
+            self.log.info("SQL query successfully built")
 
-        except Exception as e:
-            self.log.error("Erro ao montar query SQL", exc_info=True)
+        except Exception:
+            self.log.error("Error building SQL query", exc_info=True)
             raise
 
         try:
             df = self.select(stmt)
-            self.log.info(f"Select concluído. Registros retornados: {df.height()}")
+            self.log.info(f"Select completed — records returned: {df.height()}")
 
-        except Exception as e:
-            self.log.error("Erro ao executar SELECT no banco", exc_info=True)
+        except Exception:
+            self.log.error("Error executing SELECT on database", exc_info=True)
             raise
 
         try:
-            self.log.info("Calculando lb_balance atualizado baseado em qty_usage")
+            self.log.info("Calculating updated lb_balance based on qty_usage")
             df = (
                 df.with_columns(
                     (pl.col("lb_balance") - pl.col("qty_usage").fill_null(0))
@@ -63,16 +63,16 @@ class ConsumeValues(SelectInfos):
                 .select(["partnumber", "lb_balance"])
                 .collect()
             )
-            self.log.info("Cálculo concluído e dataframe final montado")
+            self.log.info("Calculation completed — final DataFrame prepared")
 
-        except Exception as e:
-            self.log.error("Erro ao calcular lb_balance no dataframe", exc_info=True)
+        except Exception:
+            self.log.error("Error calculating lb_balance in DataFrame", exc_info=True)
             raise
 
         return df
 
     def _update_infos(self, df, batch_size):
-        self.log.info(f"Iniciando update na tabela PKMC para {df.height()} registros")
+        self.log.info(f"Starting update on PKMC table for {df.height()} records")
 
         try:
             update = UpdateInfos(self.db)
@@ -84,8 +84,8 @@ class ConsumeValues(SelectInfos):
                 batch_size=batch_size
             )
 
-            self.log.info("Update finalizado com sucesso")
+            self.log.info("Update completed successfully")
 
-        except Exception as e:
-            self.log.error("Erro ao executar update no banco", exc_info=True)
+        except Exception:
+            self.log.error("Error executing update on database", exc_info=True)
             raise
