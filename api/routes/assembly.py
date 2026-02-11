@@ -13,7 +13,7 @@ log = logger("assembly")
 
 @router.get("/response/json", summary="Get response from Assembly Line API")
 def get_json_response(api: AccessAssemblyLineApi = Depends(DependeciesInjection.get_api)):
-    log.info("GET assembly/response/json — started collecting JSON from Assembly Line API")
+    log.info("GET /assembly/response/json — started collecting JSON from Assembly Line API")
 
     try:
         response = api.get_json_response()
@@ -30,7 +30,7 @@ def get_processed_response(
     api: AccessAssemblyLineApi = Depends(DependeciesInjection.get_api),
     limit: int = Query(50, ge=1, le=100000)
 ):
-    log.info(f"GET assembly/response/processed — limit={limit}")
+    log.info(f"GET /assembly/response/processed — limit={limit}")
 
     try:
         df = BuildPipeline().build_assembly(api)
@@ -48,7 +48,7 @@ def upsert_assembly(
     upsert: UpsertInfos = Depends(DependeciesInjection.get_upsert),
     batch_size: int = Query(10000, ge=1, le=100000)
 ):
-    log.info(f"POST assembly/upsert — batch_size={batch_size}")
+    log.info(f"POST /assembly/upsert — batch_size={batch_size}")
 
     try:
         df = BuildPipeline().build_assembly(api)

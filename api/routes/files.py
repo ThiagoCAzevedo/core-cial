@@ -10,7 +10,7 @@ log = logger("static")
 
 @router.get("/list", summary="Get files in excel folder")
 def list_files():
-    log.info("GET files/list — listed excel files")
+    log.info("GET /files/list — listed excel files")
 
     try:
         files = ListExcelFiles()._list_files()
@@ -24,7 +24,7 @@ def list_files():
 
 @router.post("/upload", summary="Upload file in excel folder")
 def upload_files(file: UploadFile = File(...)):
-    log.info(f"POST files/upload — received file: {file.filename}")
+    log.info(f"POST /files/upload — received file: {file.filename}")
 
     try:
         result = UploadFiles()._upload_files(file)
@@ -38,7 +38,7 @@ def upload_files(file: UploadFile = File(...)):
 
 @router.delete("/delete/{filename}", summary="Delete file in excel folder")
 def delete_files(filename: str):
-    log.info(f"DELETE files/delete — file to remove: {filename}")
+    log.info(f"DELETE /files/delete — file to remove: {filename}")
 
     try:
         result = DeleteFiles()._delete_files(filename)

@@ -11,7 +11,7 @@ log = logger("consumption")
 
 @router.get("/response/to-consume", summary="Get values to consume")
 def get_to_consume_response(svc: ConsumeValues = Depends(DependeciesInjection.get_consume)):
-    log.info("GET consumption/response/to-consume — started getting values to consume")
+    log.info("GET /consumption/response/to-consume — started getting values to consume")
 
     try:
         data = svc.get_raw_response()
@@ -28,7 +28,7 @@ def update_to_consume(
     batch_size: int = Query(10_000, ge=1, le=100_000),
     svc: ConsumeValues = Depends(DependeciesInjection.get_consume),
 ):
-    log.info(f"PUT consumption/update/to-consume — batch_size={batch_size}")
+    log.info(f"PUT /consumption/update/to-consume — batch_size={batch_size}")
 
     try:
         df = svc.values_to_consume()
