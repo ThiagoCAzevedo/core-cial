@@ -11,77 +11,76 @@ router = APIRouter()
 log = logger("requests_builder")
 
 
-@router.get("/response/to-request", summary="Get Values To Request")
+@router.get("/response/to-request", summary="Get values to request")
 def get_to_request(
     svc: QuantityToRequest = Depends(DependenciesInjection.get_to_request),
     limit: int = Query(50, ge=1, le=1000),
 ):
-    log.info(f"Rota /response/to-request chamada — limit={limit}")
+    log.info(f"GET /requests-builder/response/to-request — limit={limit}")
 
     try:
         df = svc._define_diference_to_request().collect()
-        log.info(f"Valores para requisição carregados — total de registros: {df.height}")
+        log.info(f"Values to request successfully loaded — total rows: {df.height}")
         return df.head(limit).to_dicts()
 
     except Exception as e:
-        log.error("Erro ao buscar valores para solicitar", exc_info=True)
-        raise HTTP_Exceptions().http_502("Erro ao buscar valores para solicitar: ", e)
+        log.error("Error fetching values to request", exc_info=True)
+        raise HTTP_Exceptions().http_502("Error fetching values to request: ", e)
 
 
-
-@router.post("/upsert/to-request", summary="Upsert To Request Values In The DataBase")
+@router.post("/upsert/to-request", summary="Upsert 'to request' values into the database")
 def upsert_to_request(
     batch_size: int = Query(10_000, ge=1, le=100_000),
     svc: QuantityToRequest = Depends(DependenciesInjection.get_to_request),
     upsert_svc: UpsertInfos = Depends(DependenciesInjection.get_upsert_service),
 ):
-    log.info(f"Rota /upsert/to-request chamada — batch_size={batch_size}")
+    log.info(f"POST /requests-builder/upsert/to-request — batch_size={batch_size}")
 
     try:
         df = BuildPipeline.build_to_request(svc)
-        log.info(f"Valores processados — total de registros: {len(df)}")
+        log.info(f"Values processed — total rows: {len(df)}")
 
         rows = upsert_svc.upsert_df("requests_made", df, batch_size)
-        log.info(f"Upsert concluído — linhas gravadas: {rows}")
+        log.info(f"Upsert completed — rows inserted: {rows}")
 
         return {
-            "message": "Upsert To Request concluído com sucesso.",
+            "message": "Upsert 'to request' completed successfully.",
             "rows": rows,
             "batch_size": batch_size,
             "table": "requests_made",
         }
 
     except Exception as e:
-        log.error("Erro no upsert (to request)", exc_info=True)
-        raise HTTP_Exceptions().http_500("Erro no upsert (to request)", e)
-    
+        log.error("Error during upsert (to request)", exc_info=True)
+        raise HTTP_Exceptions().http_500("Error during upsert (to request)", e)
 
-@router.post("/requester", summary="Requester To Request Values In SAP")
+
+@router.post("/requester", summary="Send 'to request' values to SAP LM01")
 def requester(
     svc: LM01_Requester = Depends(DependenciesInjection.get_lm01_requester),
-    sap = Depends(DependenciesInjection.get_sap_session)
+    sap=Depends(DependenciesInjection.get_sap_session)
 ):
-    log.info("Rota POST /requester chamada — iniciando execução do requester SAP")
+    log.info("POST /requests-builder/requester — starting SAP requester execution")
 
     try:
         session = sap.get_session()
-        log.info("Sessão SAP recuperada do SessionManager")
+        log.info("SAP session retrieved from SessionManager")
 
         if not session:
-            log.error("Nenhuma sessão SAP ativa encontrada")
+            log.error("No active SAP session found")
             raise HTTP_Exceptions().http_400(
-                "Nenhuma sessão SAP ativa.",
-                "Antes de usar este endpoint, execute /sap/session para abrir uma sessão SAP."
+                "No active SAP session.",
+                "Before using this endpoint, execute /sap/session to open a SAP session."
             )
 
         rows = svc._request_lm01()
-        log.info(f"Requester SAP executado — total de linhas processadas: {rows}")
+        log.info(f"SAP requester executed — total rows processed: {rows}")
 
         return {
-            "message": "Requester concluído com sucesso.",
+            "message": "Requester completed successfully.",
             "rows": rows,
         }
 
     except Exception as e:
-        log.error("Erro no request (to request)", exc_info=True)
-        raise HTTP_Exceptions().http_500("Erro no request (to request)", e)
+        log.error("Error in requester (to request)", exc_info=True)
+        raise HTTP_Exceptions().http_500("Error in requester (to request)", e)

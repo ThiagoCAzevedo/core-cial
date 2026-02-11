@@ -13,110 +13,112 @@ router = APIRouter()
 log = logger("forecast")
 
 
-@router.get("/response/buffer-al", summary="Get Only Buffer Values From Assembly Line DataBase")
+@router.get("/response/buffer-al", summary="Get buffer values from Assembly Line database")
 def get_buffer_al_response(
     svc: ReturnBuffAssemblyLineValues = Depends(DependenciesInjection.get_buff_al_service),
-    limit: int = Query(50, ge=1, le=100000),
+    limit: int = Query(100, ge=1, le=100000),
 ):
-    log.info(f"Rota /response/buffer-al chamada — limit={limit}")
+    log.info(f"GET /forecast/response/buffer-al — limit={limit}")
 
     try:
         df = svc.return_values_from_db().collect()
-        log.info(f"Buffer AL retornado com sucesso — total de registros: {df.height}")
+        log.info(f"Successfully obtained Buffer Assembly Line values — rows: {df.height}")
         return df.head(limit).to_dicts()
 
     except Exception as e:
-        log.error("Erro ao buscar origem (buff_al)", exc_info=True)
-        raise HTTP_Exceptions().http_502("Erro ao buscar origem (buff_al): ", e)
+        log.error("Error obtaining buffer values from Assembly Line database", exc_info=True)
+        raise HTTP_Exceptions().http_502("Error obtaining buffer values from Assembly Line database: ", e)
 
 
-@router.get("/response/fx4pd", summary="Get Values From FX4PD")
+@router.get("/response/fx4pd", summary="Get values from FX4PD API")
 def get_fx4pd_response(
     svc: ReturnFX4PDValues = Depends(DependenciesInjection.get_fx4pd_service),
-    limit: int = Query(50, ge=1, le=100000),
+    limit: int = Query(100, ge=1, le=100000),
 ):
-    log.info(f"Rota /response/fx4pd chamada — limit={limit}")
+    log.info(f"GET /forecast/response/fx4pd — limit={limit}")
 
     try:
         df = BuildPipeline().build_forecast(svc).collect()
-        log.info(f"FX4PD retornado com sucesso — total de registros: {df.height}")
+        log.info(f"FX4PD successfully obtained — total rows: {df.height}")
         return df.head(limit).to_dicts()
 
     except Exception as e:
-        log.error("Erro ao buscar origem (fx4pd)", exc_info=True)
-        raise HTTP_Exceptions().http_502("Erro ao buscar origem (fx4pd)", e)
+        log.error("Error fetching FX4PD source", exc_info=True)
+        raise HTTP_Exceptions().http_502("Error fetching FX4PD source: ", e)
 
 
-@router.get("/result", summary="Get Values Forecasted")
+@router.get("/result", summary="Get forecasted values")
 def get_forecast_result(
     svc: DefineForecastValues = Depends(DependenciesInjection.get_forecast_service),
-    limit: int = Query(50, ge=1, le=100000),
+    limit: int = Query(100, ge=1, le=100000),
 ):
-    log.info(f"Rota /result chamada — limit={limit}")
+    log.info(f"GET /forecast/result — limit={limit}")
 
     try:
         df = svc.join_fx4pd_pkmc_pk05().collect()
-        log.info(f"Forecast retornado com sucesso — total de registros: {df.height}")
+        log.info(f"Forecast successfully obtained — total rows: {df.height}")
         return df.head(limit).to_dicts()
 
     except Exception as e:
-        log.error("Erro ao buscar origem (forecast)", exc_info=True)
-        raise HTTP_Exceptions().http_502("Erro ao buscar origem (forecast)", e)
+        log.error("Error fetching forecast source", exc_info=True)
+        raise HTTP_Exceptions().http_502("Error fetching forecast source: ", e)
 
 
-@router.post("/upsert/fx4pd", summary="Upsert FX4PD Values In The DataBase")
+@router.post("/upsert/fx4pd", summary="Upsert FX4PD values into the database")
 def upsert_fx4pd(
     batch_size: int = Query(10_000, ge=1, le=100_000),
     fx4pd_svc: ReturnFX4PDValues = Depends(DependenciesInjection.get_fx4pd_service),
     upsert_svc: UpsertInfos = Depends(DependenciesInjection.get_upsert_service),
 ):
-    log.info(f"Rota /upsert/fx4pd chamada — batch_size={batch_size}")
+    log.info(f"POST /forecast/upsert/fx4pd — batch_size={batch_size}")
 
     try:
         df = BuildPipeline().build_forecast(fx4pd_svc)
         rows = upsert_svc.upsert_df("fx4pd", df, batch_size)
 
-        log.info(f"Upsert FX4PD concluído — linhas upsertadas: {rows}")
+        log.info(f"FX4PD upsert completed — rows upserted: {rows}")
 
         return {
-            "message": "Upsert concluído com sucesso.",
+            "message": "Upsert completed successfully.",
             "rows": rows,
             "batch_size": batch_size,
             "table": "fx4pd",
         }
 
     except Exception as e:
-        log.error("Erro no upsert (fx4pd)", exc_info=True)
-        raise HTTP_Exceptions().http_500("Erro no upsert (fx4pd)", e)
+        log.error("Error during FX4PD upsert", exc_info=True)
+        raise HTTP_Exceptions().http_500("Error during FX4PD upsert: ", e)
 
 
-@router.post("/upsert", summary="Upsert Forecasted Values In The DataBase")
+@router.post("/upsert", summary="Upsert forecasted values into the database")
 def upsert_forecast_pipeline(
     batch_size: int = Query(10_000, ge=1, le=100_000),
     fx4pd_svc: ReturnFX4PDValues = Depends(DependenciesInjection.get_fx4pd_service),
     forecast_svc: DefineForecastValues = Depends(DependenciesInjection.get_forecast_service),
     upsert_svc: UpsertInfos = Depends(DependenciesInjection.get_upsert_service),
 ):
-    log.info(f"Rota /upsert chamada — batch_size={batch_size}")
+    log.info(f"POST /forecast/upsert — batch_size={batch_size}")
 
     try:
-        # FX4PD FIRST
+        # FX4PD
         df_fx4pd = BuildPipeline().build_forecast(fx4pd_svc)
-        log.info(f"FX4PD carregado — registros: {df_fx4pd.select(pl.len()).collect().item()}")
+        total_fx4pd = df_fx4pd.select(pl.len()).collect().item()
 
+        log.info(f"FX4PD loaded — rows: {total_fx4pd}")
         upsert_svc.upsert_df("fx4pd", df_fx4pd, batch_size)
-        log.info("Upsert FX4PD concluído")
+
+        log.info("FX4PD upsert completed")
 
         # FORECAST
         df_forecast = forecast_svc.join_fx4pd_pkmc_pk05()
         rows_forecast = upsert_svc.upsert_df("forecast", df_forecast, batch_size)
 
-        log.info(f"Upsert FORECAST concluído — linhas: {rows_forecast}")
+        log.info(f"Forecast upsert completed — rows: {rows_forecast}")
 
         return {
-            "message": "Upsert concluído com sucesso.",
+            "message": "Upsert completed successfully.",
             "rows": {
-                "fx4pd": len(df_fx4pd),
+                "fx4pd": total_fx4pd,
                 "forecast": rows_forecast,
             },
             "batch_size": batch_size,
@@ -124,5 +126,5 @@ def upsert_forecast_pipeline(
         }
 
     except Exception as e:
-        log.error("Erro no upsert (pipeline forecast)", exc_info=True)
-        raise HTTP_Exceptions().http_500("Erro no upsert (pipeline forecast)", e)
+        log.error("Error during forecast pipeline upsert", exc_info=True)
+        raise HTTP_Exceptions().http_500("Error during forecast pipeline upsert: ", e)
