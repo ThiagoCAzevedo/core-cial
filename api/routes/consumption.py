@@ -9,40 +9,40 @@ router = APIRouter()
 log = logger("consumption")
 
 
-@router.get("/response/to-consume", summary="Get Values To Consume")
+@router.get("/response/to-consume", summary="Get values to consume")
 def get_to_consume_response(svc: ConsumeValues = Depends(DependeciesInjection.get_consume)):
-    log.info("Rota /response/to-consume chamada — iniciando coleta de valores a consumir")
+    log.info("GET consumption/response/to-consume — started getting values to consume")
 
     try:
         data = svc.get_raw_response()
-        log.info("Valores a consumir obtidos com sucesso")
+        log.info("Successfully obtained values to consume")
         return data
 
     except Exception as e:
-        log.error("Erro ao buscar valores a consumir", exc_info=True)
-        raise HTTP_Exceptions().http_502("Erro ao buscar origem: ", e)
+        log.error("Error getting values to consume", exc_info=True)
+        raise HTTP_Exceptions().http_502("Error getting values to consume: ", e)
 
 
-@router.put("/update/to-consume", summary="Update Values To Consume")
+@router.put("/update/to-consume", summary="Update values to consume")
 def update_to_consume(
     batch_size: int = Query(10_000, ge=1, le=100_000),
     svc: ConsumeValues = Depends(DependeciesInjection.get_consume),
 ):
-    log.info(f"Rota /update/to-consume chamada — batch_size={batch_size}")
+    log.info(f"PUT consumption/update/to-consume — batch_size={batch_size}")
 
     try:
         df = svc.values_to_consume()
-        log.info(f"Valores de consumo carregados — total de linhas: {df.height}")
+        log.info(f"Loaded values to consume — amount of registers: {df.height}")
 
         updated_rows = svc._update_infos(df=df, batch_size=batch_size)
-        log.info(f"Update executado com sucesso — linhas atualizadas: {updated_rows}")
+        log.info(f"Successfully executed update — amount of registers: {updated_rows}")
 
         return {
-            "message": "Update executado com sucesso.",
+            "message": "Successfully executed update.",
             "rows_updated": updated_rows,
             "batch_size": batch_size,
         }
 
     except Exception as e:
-        log.error("Erro ao atualizar valores (to-consume)", exc_info=True)
-        raise HTTP_Exceptions().http_502("Erro ao atualizar valores (to-consume): ", e)
+        log.error("Error updating values to consume", exc_info=True)
+        raise HTTP_Exceptions().http_502("Error updating values to consume: ", e)
