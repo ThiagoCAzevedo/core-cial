@@ -1,5 +1,6 @@
 from fastapi import Depends
-from services.requests_builder.requester import QuantityToRequest, LM01_Requester
+from services.requests_builder.requester import LM01_Requester
+from services.requests_builder.to_request import QuantityToRequest
 from services.sap_manager.session_manager import SAPSessionManager
 from database.queries import UpsertInfos
 from database.database import get_db
