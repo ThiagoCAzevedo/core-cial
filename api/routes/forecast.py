@@ -27,9 +27,7 @@ def get_buffer_al_response(
 
     except Exception as e:
         log.error("Error obtaining buffer values from Assembly Line database", exc_info=True)
-        raise HTTP_Exceptions().http_502(
-            "Error obtaining buffer values from Assembly Line database: ", e
-        )
+        raise HTTP_Exceptions().http_502("Error obtaining buffer values from Assembly Line database: ", e)
 
 
 @router.get("/response/fx4pd", summary="Get values from FX4PD API")
@@ -46,7 +44,7 @@ def get_fx4pd_response(
 
     except Exception as e:
         log.error("Error fetching FX4PD source", exc_info=True)
-        raise HTTP_Exceptions().http_502("Error fetching FX4PD source", e)
+        raise HTTP_Exceptions().http_502("Error fetching FX4PD source: ", e)
 
 
 @router.get("/result", summary="Get forecasted values")
@@ -63,7 +61,7 @@ def get_forecast_result(
 
     except Exception as e:
         log.error("Error fetching forecast source", exc_info=True)
-        raise HTTP_Exceptions().http_502("Error fetching forecast source", e)
+        raise HTTP_Exceptions().http_502("Error fetching forecast source: ", e)
 
 
 @router.post("/upsert/fx4pd", summary="Upsert FX4PD values into the database")
@@ -89,7 +87,7 @@ def upsert_fx4pd(
 
     except Exception as e:
         log.error("Error during FX4PD upsert", exc_info=True)
-        raise HTTP_Exceptions().http_500("Error during FX4PD upsert:", e)
+        raise HTTP_Exceptions().http_500("Error during FX4PD upsert: ", e)
 
 
 @router.post("/upsert", summary="Upsert forecasted values into the database")
@@ -129,4 +127,4 @@ def upsert_forecast_pipeline(
 
     except Exception as e:
         log.error("Error during forecast pipeline upsert", exc_info=True)
-        raise HTTP_Exceptions().http_500("Error during forecast pipeline upsert", e)
+        raise HTTP_Exceptions().http_500("Error during forecast pipeline upsert: ", e)

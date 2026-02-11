@@ -74,4 +74,4 @@ def upsert_pkmc(
 
     except Exception as e:
         log.error("Error during PKMC upsert", exc_info=True)
-        raise HTTP_Exceptions().http_500("Error during PKMC upsert", e)
+        raise HTTP_Exceptions().http_500("Error during PKMC upsert: ", e)

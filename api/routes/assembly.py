@@ -39,7 +39,7 @@ def get_processed_response(
 
     except Exception as e:
         log.error("Error processing Assembly Line JSON", exc_info=True)
-        raise HTTP_Exceptions().http_500("Error processing Assembly Line JSON:", e)
+        raise HTTP_Exceptions().http_500("Error processing Assembly Line JSON: ", e)
 
 
 @router.post("/upsert", summary="Upsert JSON values from Assembly Line in database")
@@ -66,4 +66,4 @@ def upsert_assembly(
 
     except Exception as e:
         log.error("Error during upsert operation", exc_info=True)
-        raise HTTP_Exceptions().http_500("Error during upsert operation:", e)
+        raise HTTP_Exceptions().http_500("Error during upsert operation: ", e)
