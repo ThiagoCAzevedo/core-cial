@@ -8,43 +8,43 @@ router = APIRouter()
 log = logger("static")
 
 
-@router.get("/list", summary="Get Files In Excel Folder")
+@router.get("/list", summary="Get files in excel folder")
 def list_files():
-    log.info("Rota /list chamada — iniciando listagem de arquivos Excel")
+    log.info("GET files/list — listed excel files")
 
     try:
         files = ListExcelFiles()._list_files()
-        log.info(f"Listagem concluída — total de arquivos: {len(files)}")
+        log.info(f"Finished listing — amount of registers: {len(files)}")
         return files
 
     except Exception as e:
-        log.error("Erro ao listar arquivos na pasta Excel", exc_info=True)
-        raise HTTP_Exceptions().http_500("Erro ao listar arquivos da pasta Excel: ", e)
+        log.error("Error listing excel files", exc_info=True)
+        raise HTTP_Exceptions().http_500("Error listing excel files: ", e)
 
 
-@router.post("/upload", summary="Upload File in Excel Folder")
+@router.post("/upload", summary="Upload file in excel folder")
 def upload_files(file: UploadFile = File(...)):
-    log.info(f"Rota /upload chamada — arquivo recebido: {file.filename}")
+    log.info(f"POST files/upload — received file: {file.filename}")
 
     try:
         result = UploadFiles()._upload_files(file)
-        log.info(f"Upload concluído — arquivo salvo: {file.filename}")
+        log.info(f"Finished file upload: {file.filename}")
         return result
 
     except Exception as e:
-        log.error(f"Erro ao fazer upload do arquivo: {file.filename}", exc_info=True)
-        raise HTTP_Exceptions().http_500("Erro no upload do arquivo: ", e)
+        log.error(f"Error uploading file: {file.filename}", exc_info=True)
+        raise HTTP_Exceptions().http_500("Error uploading file: ", e)
 
 
-@router.delete("/delete/{filename}", summary="Delete File in Excel Folder")
+@router.delete("/delete/{filename}", summary="Delete file in excel folder")
 def delete_files(filename: str):
-    log.info(f"Rota /delete chamada — arquivo alvo: {filename}")
+    log.info(f"DELETE files/delete — file to remove: {filename}")
 
     try:
         result = DeleteFiles()._delete_files(filename)
-        log.info(f"Arquivo removido com sucesso: {filename}")
+        log.info(f"Successfully removed file: {filename}")
         return result
 
     except Exception as e:
-        log.error(f"Erro ao remover arquivo: {filename}", exc_info=True)
-        raise HTTP_Exceptions().http_500("Erro ao remover arquivo: ", e)
+        log.error(f"Error removing file: {filename}", exc_info=True)
+        raise HTTP_Exceptions().http_500("Error removing file: ", e)
