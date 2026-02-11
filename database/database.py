@@ -6,72 +6,72 @@ import os
 
 
 log = logger("database")
-log.info("Carregando variáveis de ambiente para conexão com o banco")
+log.info("Loading environment variables for database connection")
 
-
+# Load .env file
 try:
     load_dotenv("config/.env")
-    log.info(".env carregado com sucesso")
+    log.info(".env file loaded successfully")
 except Exception:
-    log.error("Erro ao carregar .env", exc_info=True)
+    log.error("Error loading .env file", exc_info=True)
     raise
 
-
+# Build connection string
 try:
     DATABASE_URL = (
         f"mysql+mysqlconnector://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PSWD')}"
         f"@{os.getenv('MYSQL_HOST')}/{os.getenv('MYSQL_DATABASE')}"
     )
-    log.info("DATABASE_URL montada com sucesso")
+    log.info("DATABASE_URL successfully assembled")
 
 except Exception:
-    log.error("Erro ao montar DATABASE_URL", exc_info=True)
+    log.error("Error assembling DATABASE_URL", exc_info=True)
     raise
 
-
+# Create SQLAlchemy engine
 try:
     engine = create_engine(
         DATABASE_URL,
         pool_pre_ping=True,
         pool_recycle=3600,
     )
-    log.info("Engine do SQLAlchemy criada com sucesso")
+    log.info("SQLAlchemy engine created successfully")
 
 except Exception:
-    log.error("Erro ao criar engine do SQLAlchemy", exc_info=True)
+    log.error("Error creating SQLAlchemy engine", exc_info=True)
     raise
 
-
+# Configure SessionLocal
 try:
     SessionLocal = sessionmaker(
         autocommit=False,
         autoflush=False,
         bind=engine,
     )
-    log.info("SessionLocal configurada com sucesso")
+    log.info("SessionLocal configured successfully")
 
 except Exception:
-    log.error("Erro ao configurar SessionLocal", exc_info=True)
+    log.error("Error configuring SessionLocal", exc_info=True)
     raise
 
-
+# Initialize declarative base
 try:
     Base = declarative_base()
-    log.info("Declarative Base inicializada")
+    log.info("Declarative Base initialized successfully")
 
 except Exception:
-    log.error("Erro ao inicializar Declarative Base", exc_info=True)
+    log.error("Error initializing Declarative Base", exc_info=True)
     raise
 
 
 def get_db():
-    log.info("Criando sessão com o banco")
+    log.info("Creating database session")
     db = SessionLocal()
     try:
         yield db
     except Exception:
-        log.error("Erro durante uso da sessão do banco", exc_info=True)
+        log.error("Error during database session usage", exc_info=True)
         raise
     finally:
         db.close()
-        log.info("Sessão com o banco encerrada")
+        log.info("Database session closed")
