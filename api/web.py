@@ -21,4 +21,3 @@ app.include_router(requests_closure_router, prefix="/requests-closure", tags=["r
 app.include_router(pkmc_router, prefix="/static/pkmc", tags=["static"])
 app.include_router(pk05_router, prefix="/static/pk05", tags=["static"])
 app.include_router(static_files_router, prefix="/static/files", tags=["static"])
-

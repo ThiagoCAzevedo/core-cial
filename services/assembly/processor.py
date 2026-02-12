@@ -14,13 +14,13 @@ class DefineDataFrame:
             self.log.error("Error initializing response in DefineDataFrame", exc_info=True)
             raise
 
-    def extract_car_records(self, cleaned):
+    def extract_car_records(self):
         self.log.info("Starting CAR record extraction")
 
         try:
             registers = []
 
-            for lane_key, lane_val in cleaned.items():
+            for lane_key, lane_val in self.response.items():
                 if lane_key.startswith("lane_") or lane_key.startswith("reception"):
                     for fb_key, fb_val in lane_val.items():
                         for tact_key, tact_val in fb_val.items():
@@ -39,7 +39,7 @@ class DefineDataFrame:
 
             df = pl.DataFrame(registers)
 
-            self.log.info(f"Total CAR records extracted: {df.height()}")
+            self.log.info(f"Total CAR records extracted: {df.height}")
 
             return df
 
@@ -56,7 +56,7 @@ class TransformDataFrame:
         try:
             self.df = df
             self.log.info(
-                f"DataFrame received — rows: {df.height()}, columns: {len(df.columns)}"
+                f"DataFrame received — rows: {df.height}, columns: {len(df.columns)}"
             )
         except Exception:
             self.log.error("Error initializing DataFrame in TransformDataFrame", exc_info=True)
