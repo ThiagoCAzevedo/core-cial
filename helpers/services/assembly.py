@@ -53,10 +53,7 @@ class BuildPipeline:
 
         try:
             self.log.info("Collecting final DataFrame")
-            final_df = df.collect()
-            self.log.info("Assembly pipeline finished successfully")
-
-            return final_df
+            return df
 
         except Exception:
             self.log.error("Error collecting final DataFrame", exc_info=True)

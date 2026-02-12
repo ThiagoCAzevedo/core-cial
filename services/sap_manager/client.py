@@ -37,9 +37,12 @@ class SAP_Launcher:
         self.log.info("Retrieving SAPGUI → Scripting Engine instance")
 
         try:
-            app = win32com.client.GetObject("SAPGUI").GetScriptingEngine
-            return app
-
+            for i in range(20):
+                try:
+                    app = win32com.client.GetObject("SAPGUI").GetScriptingEngine
+                    return app
+                except:
+                    time.sleep(0.5)
         except Exception:
             self.log.error("Error getting SAPGUI ScriptingEngine", exc_info=True)
             raise
