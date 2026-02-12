@@ -4,7 +4,7 @@ from services.requests_checker.lt22 import LT22_Session
 from services.requests_checker.sp02 import SP02_Session, SP02_Actions
 from helpers.services.http_exception import HTTP_Exceptions
 from helpers.log.logger import logger
-
+from services.sap_manager.session_manager import SAPSessionManager
 
 router = APIRouter()
 log = logger("requests_checker")
@@ -12,12 +12,12 @@ log = logger("requests_checker")
 
 @router.post("/lt22/request", summary="Execute LT22 pipeline")
 def lt22_request(
-    svc: LT22_Session = Depends(DependenciesInjection.get_lt22_session)
+    svc: SAPSessionManager = Depends(DependenciesInjection.get_sap_session)
 ):
     log.info("POST /requests-checker/lt22/request — starting LT22 execution")
 
     try:
-        session = svc.open()
+        session = svc.get_session()
         log.info("LT22 session opened successfully — starting pipeline")
 
         LT22_BuildPipeline.request(session)

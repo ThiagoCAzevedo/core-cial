@@ -120,3 +120,14 @@ class DependenciesInjection:
         except Exception:
             DependenciesInjection.log.error("Error creating LT22_Session", exc_info=True)
             raise
+
+        
+    @staticmethod
+    def get_sap_session():
+        DependenciesInjection.log.info("Retrieving SAPSessionManager class")
+
+        try:
+            return SAPSessionManager
+        except Exception:
+            DependenciesInjection.log.error("Error returning SAPSessionManager", exc_info=True)
+            raise
