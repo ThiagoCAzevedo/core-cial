@@ -100,7 +100,7 @@ class LM01_ReturnNumOT:
 
     def get_ot_number(self):
         try:
-            msg = self.session.findById("wnd[0]/sbar").Text
+            msg = self.session.findById("wnd[0]/usr/txtMSG").Text
             match = re.search(r"(\d+)", msg)
 
             if match:
