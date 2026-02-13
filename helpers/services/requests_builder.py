@@ -41,32 +41,37 @@ class DependenciesInjection:
             raise
 
     @staticmethod
-    def get_lm01_requester():
-        DependenciesInjection.log.info("Creating LM01_Requester")
-
-        try:
-            DependenciesInjection.log.info("Retrieving SAP session")
-            sap = SAPSessionManager().get_session()
-
-            DependenciesInjection.log.info("Calculating quantity_to_request DataFrame")
-            df = QuantityToRequest()._define_diference_to_request()
-
-            requester = LM01_Requester(sap, df)
-            DependenciesInjection.log.info("LM01_Requester created successfully")
-
-            return requester
-
-        except Exception:
-            DependenciesInjection.log.error("Error creating LM01_Requester", exc_info=True)
-            raise
-
-    @staticmethod
     def get_sap_session() -> SAPSessionManager:
         DependenciesInjection.log.info("Creating SAPSessionManager for LM01")
         try:
             return SAPSessionManager()
         except Exception:
             DependenciesInjection.log.error("Error creating SAPSessionManager", exc_info=True)
+            raise
+
+    @staticmethod
+    def get_lm01_requester(
+        db: Session = Depends(get_db),                
+        sap_mgr: SAPSessionManager = Depends(get_sap_session),  
+        qty_svc: QuantityToRequest = Depends(get_to_request)  
+    ) -> LM01_Requester:
+
+        DependenciesInjection.log.info("Creating LM01_Requester")
+
+        try:
+            DependenciesInjection.log.info("Retrieving SAP session")
+            sap = sap_mgr.get_session()
+
+            DependenciesInjection.log.info("Calculating quantity_to_request DataFrame")
+            df = qty_svc._define_diference_to_request()
+
+            requester = LM01_Requester(sap, df, db)
+            DependenciesInjection.log.info("LM01_Requester created successfully")
+
+            return requester
+
+        except Exception:
+            DependenciesInjection.log.error("Error creating LM01_Requester", exc_info=True)
             raise
 
     @staticmethod

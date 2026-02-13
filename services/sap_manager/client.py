@@ -49,11 +49,11 @@ class SAP_Launcher:
 
 
 class SAP_SessionProvider:
-    def __init__(self, launcher: SAP_Launcher):
+    def __init__(self):
         self.log = logger("sap_manager")
         self.log.info("Initializing SAP_SessionProvider")
 
-        self.launcher = launcher
+        self.launcher = SAP_Launcher()
         self.connection_name = os.getenv("SAP_CONNECTION_NAME")
 
     def get_existing_session(self):
@@ -117,18 +117,13 @@ class SAP_Authenticator:
 
 
 class SAP_Client:
-    def __init__(
-        self,
-        session_provider: SAP_SessionProvider,
-        authenticator: SAP_Authenticator,
-        launcher: SAP_Launcher,
-    ):
+    def __init__(self):
         self.log = logger("sap_manager")
         self.log.info("Initializing SAP_Client")
 
-        self.session_provider = session_provider
-        self.authenticator = authenticator
-        self.launcher = launcher
+        self.session_provider = SAP_SessionProvider()
+        self.authenticator = SAP_Authenticator()
+        self.launcher = SAP_Launcher()
         self.session = None
         self.already_opened = False
 

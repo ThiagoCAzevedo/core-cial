@@ -4,30 +4,10 @@ from services.requests_checker.lt22 import LT22_Session
 from services.requests_checker.sp02 import SP02_Session, SP02_Actions
 from helpers.services.http_exception import HTTP_Exceptions
 from helpers.log.logger import logger
-from services.sap_manager.session_manager import SAPSessionManager
+
 
 router = APIRouter()
 log = logger("requests_checker")
-
-
-@router.post("/lt22/request", summary="Execute LT22 pipeline")
-def lt22_request(
-    svc: SAPSessionManager = Depends(DependenciesInjection.get_sap_session)
-):
-    log.info("POST /requests-checker/lt22/request — starting LT22 execution")
-
-    try:
-        session = svc.get_session()
-        log.info("LT22 session opened successfully — starting pipeline")
-
-        LT22_BuildPipeline.request(session)
-        log.info("LT22 pipeline executed successfully")
-
-        return {"message": "LT22 executed successfully."}
-
-    except Exception as e:
-        log.error("Error executing complete LT22 process", exc_info=True)
-        raise HTTP_Exceptions().http_500("Error executing LT22: ", e)
 
 
 @router.post("/lt22/open", summary="Open LT22 screen")
@@ -45,6 +25,26 @@ def lt22_open(
     except Exception as e:
         log.error("Error opening LT22", exc_info=True)
         raise HTTP_Exceptions().http_500("Error opening LT22: ", e)
+
+
+@router.post("/lt22/request", summary="Execute LT22 pipeline")
+def lt22_request(
+    svc: LT22_Session = Depends(DependenciesInjection.get_lt22_session)
+):
+    log.info("POST /requests-checker/lt22/request — starting LT22 execution")
+
+    try:
+        session = svc.open()
+        log.info("LT22 session opened successfully — starting pipeline")
+
+        LT22_BuildPipeline.request(session)
+        log.info("LT22 pipeline executed successfully")
+
+        return {"message": "LT22 executed successfully."}
+
+    except Exception as e:
+        log.error("Error executing complete LT22 process", exc_info=True)
+        raise HTTP_Exceptions().http_500("Error executing LT22: ", e)
 
 
 @router.get("/sp02/find-registry", summary="Find LT22 registry inside SP02")

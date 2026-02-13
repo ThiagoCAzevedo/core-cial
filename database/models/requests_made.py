@@ -13,5 +13,6 @@ class RequestsMade(Base):
     qty_boxes_to_request = Column(Float, nullable=False)
     takt = Column(String(255), nullable=False)
     rack = Column(String(255), nullable=False)
+    num_ot = Column(String(255), nullable=True)
 
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
