@@ -1,8 +1,8 @@
-import polars as pl
 from helpers.log.logger import logger
+import polars as pl
 
 
-class DefineDataFrame:
+class DefineLazyFrame:
     def __init__(self, response: dict):
         self.log = logger("assembly")
         self.log.info("Initializing DefineDataFrame")
@@ -37,26 +37,24 @@ class DefineDataFrame:
                                     "takt": tact_val.get("TACT"),
                                 })
 
-            df = pl.DataFrame(registers)
-
-            self.log.info(f"Total CAR records extracted: {df.height}")
-
-            return df
+            lf = pl.LazyFrame(registers)
+            self.log.info(f"Total CAR records extracted: {lf.select(pl.len()).collect().item()}")
+            return lf
 
         except Exception:
             self.log.error("Error extracting CAR records from cleaned JSON", exc_info=True)
             raise
 
 
-class TransformDataFrame:
-    def __init__(self, df):
+class TransformLazyFrame:
+    def __init__(self, lf):
         self.log = logger("assembly")
         self.log.info("Initializing TransformDataFrame")
 
         try:
-            self.df = df
+            self.lf = lf
             self.log.info(
-                f"DataFrame received — rows: {df.height}, columns: {len(df.columns)}"
+                f"DataFrame received — rows: {lf.height}, columns: {len(lf.columns)}"
             )
         except Exception:
             self.log.error("Error initializing DataFrame in TransformDataFrame", exc_info=True)
@@ -66,8 +64,8 @@ class TransformDataFrame:
         self.log.info("Applying transformations (remove lane_ prefix, cast lfdnr_sequence)")
 
         try:
-            df = (
-                self.df
+            lf = (
+                self.lf
                 .with_columns([
                     pl.col("lane").str.replace("lane_", ""),
                     pl.col("lfdnr_sequence").cast(pl.Utf8)
@@ -75,7 +73,7 @@ class TransformDataFrame:
             )
 
             self.log.info("Transformation completed successfully")
-            return df
+            return lf
 
         except Exception:
             self.log.error(
@@ -88,12 +86,12 @@ class TransformDataFrame:
         self.log.info("Creating column knr_fx4pd")
 
         try:
-            df = self.df.with_columns(
+            lf = self.lf.with_columns(
                 (pl.col("werk") + pl.col("spj") + pl.col("knr")).alias("knr_fx4pd")
             )
 
             self.log.info("Column knr_fx4pd created successfully")
-            return df
+            return lf
 
         except Exception:
             self.log.error(

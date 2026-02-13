@@ -2,9 +2,8 @@ from fastapi import APIRouter, Query, Depends
 from services.assembly.assembly_api import AccessAssemblyLineApi
 from helpers.services.assembly import BuildPipeline, DependeciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
-from database.queries import UpsertInfos
 from helpers.log.logger import logger
-import polars as pl
+from database.queries import UpsertInfos
 
 
 router = APIRouter()
@@ -54,7 +53,7 @@ def upsert_assembly(
 
     try:
         df = BuildPipeline().build_assembly(api)
-        log.info(f"Assembly pipeline successfully executed — amount of registers: {df.select(pl.len()).item()}")
+        log.info(f"Assembly pipeline successfully executed — amount of registers: {df.height}")
 
         rows = upsert.upsert_df("assembly_line", df, batch_size)
         log.info(f"Successfully upserted values — amount of registers: {rows}")
