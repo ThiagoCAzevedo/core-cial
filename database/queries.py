@@ -98,7 +98,7 @@ class SelectInfos:
 
         try:
             rows = self.db.execute(stmt).mappings().all()
-            return pl.LazyFrame(rows) if rows else pl.LazFrame()
+            return pl.LazyFrame(rows) if rows else pl.LazyFrame()
 
         except Exception:
             self.log.error("Error executing SELECT", exc_info=True)

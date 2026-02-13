@@ -12,18 +12,15 @@ log = logger("consumption")
 @router.get("/response/to-consume", summary="Get values to consume")
 def get_to_consume_response(svc: ConsumeValues = Depends(DependeciesInjection.get_consume)):
     log.info("GET /consumption/response/to-consume — started getting values to consume")
-
     try:
-        data = svc.get_raw_response()
         log.info("Successfully obtained values to consume")
-        return data
-
+        return svc.values_to_consume()
     except Exception as e:
         log.error("Error getting values to consume", exc_info=True)
         raise HTTP_Exceptions().http_502("Error getting values to consume: ", e)
 
 
-@router.put("/update/to-consume", summary="Update values to consume")
+@router.put("/update/to-consume", summary="Update values consumed")
 def update_to_consume(
     batch_size: int = Query(10_000, ge=1, le=100_000),
     svc: ConsumeValues = Depends(DependeciesInjection.get_consume),
