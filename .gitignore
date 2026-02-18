@@ -30,7 +30,6 @@ env/
 
 # -- .ENV --
 .env
-.env.*
 
 # -- STORAGE --
 /storage/excel/
