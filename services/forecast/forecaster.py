@@ -1,29 +1,49 @@
 from database.queries import SelectInfos
-from helpers.data.cleaner import CleanerBase
-import polars as pl
+from sqlalchemy import select
+from database.models.fx4pd import FX4PD
+from database.models.pkmc import PKMC
+from database.models.pk05 import PK05
+from helpers.log.logger import logger
 
 
 class DefineForecastValues(SelectInfos):
+    def __init__(self):
+        self.log = logger("forecast")
+        self.log.info("Initializing DefineForecastValues")
+        
+        SelectInfos.__init__(self)
+
     def join_fx4pd_pkmc_pk05(self):
-        return self.select_bd_infos(
-            """
-            SELECT
-                fx4pd.knr_fx4pd,
-                fx4pd.partnumber,
-                fx4pd.qty_usage,
-                fx4pd.qty_unit,
-                pkmc.num_reg_circ,
-                pk05.takt,
-                pkmc.rack,
-                pkmc.lb_balance,
-                pkmc.total_theoretical_qty,
-                pkmc.qty_for_restock,
-                pkmc.qty_per_box,
-                pkmc.qty_max_box
-            FROM fx4pd
-            INNER JOIN pkmc
-                ON pkmc.partnumber = fx4pd.partnumber
-            INNER JOIN pk05
-                ON pk05.supply_area = pkmc.supply_area
-            """
-        )
+        self.log.info("Building join query: FX4PD + PKMC + PK05")
+
+        try:
+            stmt = (
+                select(
+                    FX4PD.knr_fx4pd, FX4PD.partnumber, FX4PD.qty_usage, FX4PD.qty_unit,
+                    PKMC.num_reg_circ, PK05.takt, PKMC.rack, PKMC.lb_balance,
+                    PKMC.total_theoretical_qty, PKMC.qty_for_restock, PKMC.qty_per_box, PKMC.qty_max_box,
+                )
+                .join(
+                    PKMC,
+                    PKMC.partnumber == FX4PD.partnumber
+                )
+                .join(
+                    PK05,
+                    PK05.supply_area == PKMC.supply_area
+                )
+            )
+
+            self.log.info("SQL query successfully built")
+
+        except Exception:
+            self.log.error("Error building SQL query in join_fx4pd_pkmc_pk05", exc_info=True)
+            raise
+
+        try:
+            df = self.select(stmt)
+            self.log.info(f"Select completed — records returned: {df.height()}")
+            return df
+
+        except Exception:
+            self.log.error("Error executing SELECT in join_fx4pd_pkmc_pk05", exc_info=True)
+            raise

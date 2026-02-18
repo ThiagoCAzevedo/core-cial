@@ -1,0 +1,37 @@
+# -- PYTHON GENERAL -- 
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+*.log
+
+.venv/
+venv/
+env/
+
+.cache/
+*.cache
+
+# -- FASTAPI/UVICORN --
+*.pid
+
+# -- ALEMBIC --
+/alembic/versions/*.py
+/alembic/versions/__pycache__/
+/alembic/README
+
+# -- IDEs/TOOLS --
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# -- .ENV --
+.env
+
+# -- STORAGE --
+/storage/excel/
+/storage/sap/
+/storage/log/

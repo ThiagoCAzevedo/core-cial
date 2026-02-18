@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
+from helpers.log.logger import logger
 import os, requests, urllib3
+
 
 load_dotenv("config/.env")
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -7,9 +9,39 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class AccessAssemblyLineApi:
     def __init__(self):
-        self.al_url = os.getenv("AL_API_ENDPOINT")
+        self.log = logger("assembly")
+        self.log.info("Initializing AccessAssemblyLineApi")
 
-    def get_raw_response(self):
-        response = requests.get(self.al_url, verify=False, timeout=5)
-        response.raise_for_status()
-        return response.json()
+        try:
+            self.al_url = os.getenv("AL_API_ENDPOINT")
+            self.log.info(f"Endpoint loaded: {self.al_url}")
+
+        except Exception:
+            self.log.error("Error loading environment variable: AL_API_ENDPOINT", exc_info=True)
+            raise
+
+    def get_json_response(self):
+        self.log.info(f"Sending GET request to {self.al_url}")
+
+        try:
+            response = requests.get(self.al_url, verify=False, timeout=5)
+            self.log.info(f"Response received — status code: {response.status_code}")
+
+            response.raise_for_status()
+
+        except requests.exceptions.Timeout:
+            self.log.error("Timeout while accessing assembly line API", exc_info=True)
+            raise
+
+        except requests.exceptions.RequestException:
+            self.log.error("Request error while accessing assembly line API", exc_info=True)
+            raise
+
+        try:
+            data = response.json()
+            self.log.info("API JSON successfully processed")
+            return data
+        
+        except Exception:
+            self.log.error("Error converting response to JSON", exc_info=True)
+            raise
