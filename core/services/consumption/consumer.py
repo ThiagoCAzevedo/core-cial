@@ -9,7 +9,6 @@ import polars as pl
 
 class ConsumeValues:
     def __init__(self, db):
-        self.db = db
         self.log = logger("consumption")
         self.selector = SelectInfos(db)
         self.updater = UpdateInfos(db)
@@ -22,14 +21,8 @@ class ConsumeValues:
         try:
             stmt = (
                 select(
-                    Forecast.partnumber,
-                    Forecast.takt,
-                    Forecast.rack,
-                    Forecast.knr_fx4pd,
-                    Forecast.qty_usage,
-                    Assembly.takt.label("assembly_takt"),
-                    PKMC.partnumber.label("pkmc_partnumber"),
-                    PKMC.lb_balance,
+                    Forecast.partnumber, Forecast.takt, Forecast.rack, Forecast.knr_fx4pd,
+                    Forecast.qty_usage, Assembly.takt.label("assembly_takt"), PKMC.partnumber.label("pkmc_partnumber"), PKMC.lb_balance
                 )
                 .join(
                     Assembly,
@@ -37,8 +30,7 @@ class ConsumeValues:
                     & (Forecast.takt == Assembly.takt)
                 )
                 .join(
-                    PKMC,
-                    PKMC.partnumber == Forecast.partnumber
+                    PKMC, PKMC.partnumber == Forecast.partnumber
                 )
             )
             self.log.info("SQL query successfully built")
@@ -48,8 +40,8 @@ class ConsumeValues:
             raise
 
         try:
-            df = self.selector.select(stmt)
-            self.log.info(f"Select completed — records returned: {df.height()}")
+            lf = self.selector.select(stmt)
+            self.log.info(f"Select completed — records returned: {lf.select(pl.len()).collect().item()}")
 
         except Exception:
             self.log.error("Error executing SELECT on database", exc_info=True)
@@ -58,8 +50,8 @@ class ConsumeValues:
         try:
             self.log.info("Calculating updated lb_balance based on qty_usage")
 
-            df = (
-                df.with_columns(
+            lf = (
+                lf.with_columns(
                     (pl.col("lb_balance") - pl.col("qty_usage").fill_null(0))
                     .alias("lb_balance")
                 )
@@ -73,7 +65,7 @@ class ConsumeValues:
             self.log.error("Error calculating lb_balance in DataFrame", exc_info=True)
             raise
 
-        return df
+        return lf.collect()
 
     def _update_infos(self, df: pl.DataFrame, batch_size: int):
         self.log.info(f"Starting update on PKMC table for {df.height()} records")

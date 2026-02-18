@@ -21,7 +21,6 @@ env/
 /alembic/versions/*.py
 /alembic/versions/__pycache__/
 /alembic/README
-alembic.ini
 
 # -- IDEs/TOOLS --
 .vscode/

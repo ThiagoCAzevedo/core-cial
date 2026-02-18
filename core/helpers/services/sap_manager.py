@@ -11,16 +11,16 @@ class DependenciesInjection:
         DependenciesInjection.log.info("Creating SAP_Client instance")
 
         try:
-            launcher = SAP_Launcher()
+            SAP_Launcher()
             DependenciesInjection.log.info("SAP_Launcher created")
 
-            provider = SAP_SessionProvider(launcher)
+            SAP_SessionProvider()
             DependenciesInjection.log.info("SAP_SessionProvider created")
 
-            auth = SAP_Authenticator()
+            SAP_Authenticator()
             DependenciesInjection.log.info("SAP_Authenticator created")
 
-            client = SAP_Client(provider, auth, launcher)
+            client = SAP_Client()
             DependenciesInjection.log.info("SAP_Client created successfully")
 
             return client

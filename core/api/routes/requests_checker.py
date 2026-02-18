@@ -10,6 +10,23 @@ router = APIRouter()
 log = logger("requests_checker")
 
 
+@router.post("/lt22/open", summary="Open LT22 screen")
+def lt22_open(
+    svc: LT22_Session = Depends(DependenciesInjection.get_lt22_session)
+):
+    log.info("POST /requests-checker/lt22/open — opening LT22 session")
+
+    try:
+        svc.open()
+        log.info("LT22 session opened successfully")
+
+        return {"message": "LT22 opened successfully."}
+
+    except Exception as e:
+        log.error("Error opening LT22", exc_info=True)
+        raise HTTP_Exceptions().http_500("Error opening LT22: ", e)
+
+
 @router.post("/lt22/request", summary="Execute LT22 pipeline")
 def lt22_request(
     svc: LT22_Session = Depends(DependenciesInjection.get_lt22_session)
@@ -28,23 +45,6 @@ def lt22_request(
     except Exception as e:
         log.error("Error executing complete LT22 process", exc_info=True)
         raise HTTP_Exceptions().http_500("Error executing LT22: ", e)
-
-
-@router.post("/lt22/open", summary="Open LT22 screen")
-def lt22_open(
-    svc: LT22_Session = Depends(DependenciesInjection.get_lt22_session)
-):
-    log.info("POST /requests-checker/lt22/open — opening LT22 session")
-
-    try:
-        svc.open()
-        log.info("LT22 session opened successfully")
-
-        return {"message": "LT22 opened successfully."}
-
-    except Exception as e:
-        log.error("Error opening LT22", exc_info=True)
-        raise HTTP_Exceptions().http_500("Error opening LT22: ", e)
 
 
 @router.get("/sp02/find-registry", summary="Find LT22 registry inside SP02")

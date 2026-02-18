@@ -56,10 +56,10 @@ class DependenciesInjection:
             raise
 
     @staticmethod
-    def get_buff_al_service() -> ReturnBuffAssemblyLineValues:
+    def get_buff_al_service(db: Session = Depends(get_db)) -> ReturnBuffAssemblyLineValues:
         DependenciesInjection.log.info("Creating service ReturnBuffAssemblyLineValues")
         try:
-            return ReturnBuffAssemblyLineValues()
+            return ReturnBuffAssemblyLineValues(db)
         except Exception:
             DependenciesInjection.log.error("Error creating ReturnBuffAssemblyLineValues service", exc_info=True)
             raise

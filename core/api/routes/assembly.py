@@ -2,9 +2,8 @@ from fastapi import APIRouter, Query, Depends
 from services.assembly.assembly_api import AccessAssemblyLineApi
 from helpers.services.assembly import BuildPipeline, DependeciesInjection
 from helpers.services.http_exception import HTTP_Exceptions
-from database.queries import UpsertInfos
 from helpers.log.logger import logger
-import polars as pl
+from database.queries import UpsertInfos
 
 
 router = APIRouter()
@@ -12,13 +11,15 @@ log = logger("assembly")
 
 
 @router.get("/response/json", summary="Get response from Assembly Line API")
-def get_json_response(api: AccessAssemblyLineApi = Depends(DependeciesInjection.get_api)):
+def get_json_response(
+    api: AccessAssemblyLineApi = Depends(DependeciesInjection.get_api),
+    limit: int = Query(1, ge=1, le=5),
+):
     log.info("GET /assembly/response/json — started collecting JSON from Assembly Line API")
 
     try:
-        response = api.get_json_response()
         log.info("Sucessfully returned JSON from Assembly Line API")
-        return response
+        return dict(list(api.get_json_response().items())[:limit])
 
     except Exception as e:
         log.error("Error trying to get JSON from Assembly Line API", exc_info=True)
@@ -52,7 +53,7 @@ def upsert_assembly(
 
     try:
         df = BuildPipeline().build_assembly(api)
-        log.info(f"Assembly pipeline successfully executed — amount of registers: {df.select(pl.len()).collect().item()}")
+        log.info(f"Assembly pipeline successfully executed — amount of registers: {df.height}")
 
         rows = upsert.upsert_df("assembly_line", df, batch_size)
         log.info(f"Successfully upserted values — amount of registers: {rows}")

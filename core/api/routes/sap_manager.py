@@ -18,10 +18,10 @@ def create_sap_session(
     log.info("POST /sap-manager/session — starting SAP session creation")
 
     try:
-        session = client.connect()
+        client.connect()
         log.info("SAP session successfully connected")
 
-        session_manager.set_session(session)
+        session_manager.set_session(client)
         log.info("SAP session stored in SessionManager")
 
         return {"message": "SAP session created successfully!"}
@@ -29,3 +29,13 @@ def create_sap_session(
     except Exception as e:
         log.error("Error creating SAP session", exc_info=True)
         raise HTTP_Exceptions().http_500("Error creating SAP session: ", e)
+    
+
+@router.get("/status")
+def sap_status():
+    sess = SAPSessionManager.get_session()
+    return {
+        "session": repr(sess),
+        "type": str(type(sess)),
+        "has_run_transaction": hasattr(sess, "run_transaction")
+    }

@@ -8,7 +8,6 @@ import os
 log = logger("database")
 log.info("Loading environment variables for database connection")
 
-# Load .env file
 try:
     load_dotenv("config/.env")
     log.info(".env file loaded successfully")
@@ -16,7 +15,6 @@ except Exception:
     log.error("Error loading .env file", exc_info=True)
     raise
 
-# Build connection string
 try:
     DATABASE_URL = (
         f"mysql+mysqlconnector://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PSWD')}"
@@ -28,7 +26,6 @@ except Exception:
     log.error("Error assembling DATABASE_URL", exc_info=True)
     raise
 
-# Create SQLAlchemy engine
 try:
     engine = create_engine(
         DATABASE_URL,
@@ -41,7 +38,6 @@ except Exception:
     log.error("Error creating SQLAlchemy engine", exc_info=True)
     raise
 
-# Configure SessionLocal
 try:
     SessionLocal = sessionmaker(
         autocommit=False,
@@ -54,7 +50,6 @@ except Exception:
     log.error("Error configuring SessionLocal", exc_info=True)
     raise
 
-# Initialize declarative base
 try:
     Base = declarative_base()
     log.info("Declarative Base initialized successfully")

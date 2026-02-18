@@ -97,11 +97,8 @@ class SelectInfos:
                     stmt = stmt.where(table.c[col] == value)
 
         try:
-            result = self.db.execute(stmt)
-            rows = result.fetchall()
-            cols = result.keys()
-
-            return pl.DataFrame(rows, schema=list(cols))
+            rows = self.db.execute(stmt).mappings().all()
+            return pl.LazyFrame(rows) if rows else pl.LazyFrame()
 
         except Exception:
             self.log.error("Error executing SELECT", exc_info=True)
