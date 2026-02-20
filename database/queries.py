@@ -13,7 +13,7 @@ class UpsertInfos:
         self.log = logger("database")
         self.log.info("Initializing UpsertInfos")
 
-    def upsert_df(self, table, df: pl.DataFrame, batch_size=1000):
+    def upsert_df(self, table, df, batch_size=1000):
         self.log.info(f"Starting UPSERT operation for table '{table}'")
 
         try:
@@ -48,15 +48,25 @@ class UpsertInfos:
         try:
             stmt = insert(table).values(rows)
 
+            # colunas realmente presentes no INSERT
+            batch_cols = set(rows[0].keys())
+
+            # pega nome da PK da tabela
+            primary_keys = {col.name for col in table.primary_key}
+
             ignore_fields = {"created_at", "updated_at"}
 
+            # somente colunas presentes no batch podem aparecer no UPDATE
             update_cols = {
-                col.name: stmt.inserted[col.name]
-                for col in table.columns
-                if not col.primary_key and col.name not in ignore_fields
+                col: stmt.inserted[col]
+                for col in batch_cols
+                if col not in primary_keys and col not in ignore_fields
             }
 
-            stmt = stmt.on_duplicate_key_update(**update_cols)
+            if update_cols:
+                stmt = stmt.on_duplicate_key_update(**update_cols)
+            else:
+                stmt = stmt.prefix_with("IGNORE")
 
             self.db.execute(stmt)
             self.db.commit()
@@ -64,7 +74,6 @@ class UpsertInfos:
         except Exception:
             self.log.error("Error executing UPSERT batch", exc_info=True)
             raise
-
 
 
 class SelectInfos:
@@ -79,14 +88,17 @@ class SelectInfos:
         columns: list[str] = None,
         filters: dict = None
     ):
+        
         if isinstance(query_or_table, Select):
             stmt = query_or_table
+            self.log.info("Query recebida já é um SELECT")
         else:
             table_name = query_or_table
             table = Base.metadata.tables[table_name]
 
             if columns:
                 col_objs = [table.c[col] for col in columns]
+                self.log.info(f"Colunas selecionadas: {columns}")
             else:
                 col_objs = [table]
 
@@ -97,8 +109,40 @@ class SelectInfos:
                     stmt = stmt.where(table.c[col] == value)
 
         try:
-            rows = self.db.execute(stmt).mappings().all()
-            return pl.LazyFrame(rows) if rows else pl.LazyFrame()
+            self.log.info(f"SQL compilado → {stmt}")
+        except Exception:
+            pass
+
+        try:
+            rows = self.db.execute(stmt).all()
+            self.log.info(f"ROWS retornados → {rows[:5]}")
+            self.log.info(f"Total de linhas → {len(rows)}")
+
+            colnames = [col.key for col in stmt.exported_columns]
+            self.log.info(f"Colunas detectadas no SELECT → {colnames}")
+
+            if not rows:
+                return pl.LazyFrame()
+
+            norm_rows = []
+            for r in rows:
+                if not isinstance(r, tuple):
+                    norm_rows.append(tuple(r))
+                    continue
+
+                if len(r) == 1 and isinstance(r[0], tuple):
+                    norm_rows.append(r[0])
+                    continue
+
+                norm_rows.append(r)
+
+            self.log.info(f"Primeira row normalizada → {norm_rows[0]}")
+            self.log.info(f"Tamanho da primeira row → {len(norm_rows[0])}")
+
+            df = pl.DataFrame(norm_rows, schema=colnames)
+            self.log.info("DataFrame Polars construído com sucesso")
+
+            return df.lazy()
 
         except Exception:
             self.log.error("Error executing SELECT", exc_info=True)

@@ -18,7 +18,7 @@ except Exception:
 try:
     DATABASE_URL = (
         f"mysql+mysqlconnector://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PSWD')}"
-        f"@{os.getenv('MYSQL_HOST')}/{os.getenv('MYSQL_DATABASE')}"
+        f"@{os.getenv('MYSQL_HOST')}:{os.getenv('MYSQL_PORT')}/{os.getenv('MYSQL_DATABASE')}"
     )
     log.info("DATABASE_URL successfully assembled")
 

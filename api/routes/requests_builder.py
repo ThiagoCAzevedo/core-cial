@@ -37,10 +37,10 @@ def upsert_to_request(
     log.info(f"POST /requests-builder/upsert/to-request — batch_size={batch_size}")
 
     try:
-        df = BuildPipeline.build_to_request(svc)
-        log.info(f"Values processed — total rows: {len(df)}")
+        lf = BuildPipeline.build_to_request(svc)
+        # log.info(f"Values processed — total rows: {len(df)}")
 
-        rows = upsert_svc.upsert_df("requests_made", df, batch_size)
+        rows = upsert_svc.upsert_df("requests_made", lf, batch_size)
         log.info(f"Upsert completed — rows inserted: {rows}")
 
         return {

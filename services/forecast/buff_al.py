@@ -2,7 +2,7 @@ from database.queries import SelectInfos
 from sqlalchemy import select
 from database.models.assembly import Assembly
 from helpers.log.logger import logger
-
+import polars as pl
 
 class ReturnBuffAssemblyLineValues:
     def __init__(self, db):
@@ -18,6 +18,7 @@ class ReturnBuffAssemblyLineValues:
             stmt = (
                 select(
                     Assembly.knr,
+                    Assembly.knr_fx4pd,
                     Assembly.model,
                     Assembly.lfdnr_sequence,
                 )
@@ -33,12 +34,12 @@ class ReturnBuffAssemblyLineValues:
             raise
 
         try:
-            df = self.selector.select(stmt)
+            lf = self.selector.select(stmt)
 
             self.log.info(
-                f"Select completed — records returned: {df.height()}"
+                f"Select completed — records returned: {lf.select(pl.len()).collect()}"
             )
-            return df
+            return lf
 
         except Exception:
             self.log.error(

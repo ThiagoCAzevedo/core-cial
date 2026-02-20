@@ -13,6 +13,7 @@ router = APIRouter()
 log = logger("forecast")
 
 
+# -- GET VALUES FROM LANE BUFFER --
 @router.get("/response/buffer-al", summary="Get buffer values from Assembly Line database")
 def get_buffer_al_response(
     svc: ReturnBuffAssemblyLineValues = Depends(DependenciesInjection.get_buff_al_service),
@@ -30,6 +31,7 @@ def get_buffer_al_response(
         raise HTTP_Exceptions().http_502("Error obtaining buffer values from Assembly Line database: ", e)
 
 
+# -- FX4PD ROUTES -- 
 @router.get("/response/fx4pd", summary="Get values from FX4PD API")
 def get_fx4pd_response(
     svc: ReturnFX4PDValues = Depends(DependenciesInjection.get_fx4pd_service),
@@ -47,6 +49,33 @@ def get_fx4pd_response(
         raise HTTP_Exceptions().http_502("Error fetching FX4PD source: ", e)
 
 
+@router.post("/upsert/fx4pd", summary="Upsert FX4PD values into the database")
+def upsert_fx4pd(
+    batch_size: int = Query(10_000, ge=1, le=100_000),
+    fx4pd_svc: ReturnFX4PDValues = Depends(DependenciesInjection.get_fx4pd_service),
+    upsert_svc: UpsertInfos = Depends(DependenciesInjection.get_upsert_service),
+):
+    log.info(f"POST /forecast/upsert/fx4pd — batch_size={batch_size}")
+
+    try:
+        lf = BuildPipeline().build_forecast(fx4pd_svc)
+        rows = upsert_svc.upsert_df("fx4pd", lf, batch_size)
+
+        log.info(f"FX4PD upsert completed — rows upserted: {rows}")
+
+        return {
+            "message": "Upsert completed successfully.",
+            "rows": rows,
+            "batch_size": batch_size,
+            "table": "fx4pd",
+        }
+
+    except Exception as e:
+        log.error("Error during FX4PD upsert", exc_info=True)
+        raise HTTP_Exceptions().http_500("Error during FX4PD upsert: ", e)
+
+
+# -- ROUTES TO FINAL FORECAST --
 @router.get("/result", summary="Get forecasted values")
 def get_forecast_result(
     svc: DefineForecastValues = Depends(DependenciesInjection.get_forecast_service),
@@ -64,32 +93,6 @@ def get_forecast_result(
         raise HTTP_Exceptions().http_502("Error fetching forecast source: ", e)
 
 
-@router.post("/upsert/fx4pd", summary="Upsert FX4PD values into the database")
-def upsert_fx4pd(
-    batch_size: int = Query(10_000, ge=1, le=100_000),
-    fx4pd_svc: ReturnFX4PDValues = Depends(DependenciesInjection.get_fx4pd_service),
-    upsert_svc: UpsertInfos = Depends(DependenciesInjection.get_upsert_service),
-):
-    log.info(f"POST /forecast/upsert/fx4pd — batch_size={batch_size}")
-
-    try:
-        df = BuildPipeline().build_forecast(fx4pd_svc)
-        rows = upsert_svc.upsert_df("fx4pd", df, batch_size)
-
-        log.info(f"FX4PD upsert completed — rows upserted: {rows}")
-
-        return {
-            "message": "Upsert completed successfully.",
-            "rows": rows,
-            "batch_size": batch_size,
-            "table": "fx4pd",
-        }
-
-    except Exception as e:
-        log.error("Error during FX4PD upsert", exc_info=True)
-        raise HTTP_Exceptions().http_500("Error during FX4PD upsert: ", e)
-
-
 @router.post("/upsert", summary="Upsert forecasted values into the database")
 def upsert_forecast_pipeline(
     batch_size: int = Query(10_000, ge=1, le=100_000),
@@ -101,18 +104,15 @@ def upsert_forecast_pipeline(
 
     try:
         # FX4PD
-        df_fx4pd = BuildPipeline().build_forecast(fx4pd_svc)
-        total_fx4pd = df_fx4pd.select(pl.len()).collect().item()
-
+        lf_fx4pd = BuildPipeline().build_forecast(fx4pd_svc)
+        total_fx4pd = lf_fx4pd.select(pl.len()).collect().item()
         log.info(f"FX4PD loaded — rows: {total_fx4pd}")
-        upsert_svc.upsert_df("fx4pd", df_fx4pd, batch_size)
-
-        log.info("FX4PD upsert completed")
+        upsert_svc.upsert_df("fx4pd", lf_fx4pd, batch_size)
+        log.info("FX4PD upsert completed")  
 
         # FORECAST
-        df_forecast = forecast_svc.join_fx4pd_pkmc_pk05()
-        rows_forecast = upsert_svc.upsert_df("forecast", df_forecast, batch_size)
-
+        lf_forecast = forecast_svc.join_fx4pd_pkmc_pk05()
+        rows_forecast = upsert_svc.upsert_df("forecast", lf_forecast, batch_size)
         log.info(f"Forecast upsert completed — rows: {rows_forecast}")
 
         return {

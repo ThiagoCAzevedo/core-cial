@@ -1,24 +1,40 @@
 from helpers.log.logger import logger
 from database.queries import UpdateInfos
+from database.queries import SelectInfos
+from database.models.requests_made import RequestsMade
+from sqlalchemy import select
 import polars as pl
 import re
 
 
+class GetQuantityToRequest:
+    def __init__(self, db):
+        self.selector = SelectInfos(db)
+
+    def return_quantity(self):
+        stmt = (
+            select(
+                RequestsMade.partnumber,
+                RequestsMade.num_reg_circ,
+                RequestsMade.qty_to_request,
+                RequestsMade.qty_boxes_to_request,
+                RequestsMade.takt,
+                RequestsMade.rack,
+                RequestsMade.num_ot,
+            )
+        )
+
+        return self.selector.select(stmt)
+    
+
 class LM01_Requester:
-    def __init__(self, sap, df, db_session):
+    def __init__(self, sap, db_session):
         self.log = logger("request")
         self.log.info("Initializing LM01_Requester")
 
         self.sap = sap
         self.db = db_session
-
-        try:
-            self.df = df.collect()
-            self.log.info(f"DataFrame loaded — rows: {self.df.height()}")
-
-        except Exception:
-            self.log.error("Error collecting DataFrame", exc_info=True)
-            raise
+        self.df = GetQuantityToRequest(db_session).return_quantity().collect()
 
 
     def _request_lm01(self):
@@ -26,6 +42,9 @@ class LM01_Requester:
 
         try:
             session, _ = self.sap.run_transaction("/nLM01")
+            session.findById("wnd[0]/usr/btnRLMOB-PBACK").press()
+            session, _ = self.sap.run_transaction("/nLM01")
+
             self.log.info("SAP LM01 session OK")
 
         except Exception:
@@ -33,7 +52,7 @@ class LM01_Requester:
             raise
 
         try:
-            session.findById("wnd[0]/usr/txtGV_OT").setFocus()
+            session.findById("wnd[0]/usr/btnTEXT2").press()
             session.findById("wnd[0]/usr/btnTEXT1").press()
         except Exception:
             self.log.error("Error preparing LM01 UI", exc_info=True)
@@ -51,7 +70,6 @@ class LM01_Requester:
                 num_circ = str(row["num_reg_circ"])
 
                 self.log.info(f"Processing part={row['partnumber']} | caixas={qtd_caixas}")
-
                 for _ in range(qtd_caixas):
 
                     rows_requested += 1
@@ -59,30 +77,32 @@ class LM01_Requester:
                     try:
                         session.findById("wnd[0]/usr/ctxtVG_PKNUM").Text = num_circ
                         session.findById("wnd[0]").sendVKey(0)
+                        session.findById("wnd[0]").sendVKey(0)
                         session.findById("wnd[0]").sendVKey(8)
-                        session.findById("wnd[0]/usr/btnRLMOB-POK").press()
-                        session.findById("wnd[0]/usr/btnBTOK").press()
+
+                        num_ot = ot_reader.get_ot_number()
+
+                        if num_ot:
+                            df_update = pl.DataFrame({
+                                "num_reg_circ": [num_circ],
+                                "num_ot": [num_ot]
+                            })
+
+                            updater.update_df(
+                                table_name="requests_made",
+                                df=df_update,
+                                key_column="num_reg_circ"
+                            )
+
+                        else:
+                            self.log.warning(f"Nenhuma OT retornada p/ {num_circ}")
+
+                        session.findById("wnd[0]").sendVKey(0)
 
                     except Exception:
                         self.log.error(f"Erro solicitando caixa num_circ={num_circ}", exc_info=True)
                         raise
 
-                    num_ot = ot_reader.get_ot_number()
-
-                    if num_ot:
-                        df_update = pl.DataFrame({
-                            "num_reg_circ": [num_circ],
-                            "num_ot": [num_ot]
-                        })
-
-                        updater.update_df(
-                            table_name="requests_made",
-                            df=df_update,
-                            key_column="num_reg_circ"
-                        )
-
-                    else:
-                        self.log.warning(f"Nenhuma OT retornada p/ {num_circ}")
 
             self.log.info(f"LM01 finalizado — total caixas: {rows_requested}")
 
@@ -100,7 +120,7 @@ class LM01_ReturnNumOT:
 
     def get_ot_number(self):
         try:
-            msg = self.session.findById("wnd[0]/usr/txtMSG").Text
+            msg = self.session.findById("wnd[0]/usr/txtGV_300_MSG2").Text
             match = re.search(r"(\d+)", msg)
 
             if match:

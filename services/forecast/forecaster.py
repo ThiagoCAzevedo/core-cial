@@ -4,14 +4,14 @@ from database.models.fx4pd import FX4PD
 from database.models.pkmc import PKMC
 from database.models.pk05 import PK05
 from helpers.log.logger import logger
+import polars as pl
 
 
 class DefineForecastValues(SelectInfos):
-    def __init__(self):
+    def __init__(self, db):
         self.log = logger("forecast")
         self.log.info("Initializing DefineForecastValues")
-        
-        SelectInfos.__init__(self)
+        self.selector = SelectInfos(db)
 
     def join_fx4pd_pkmc_pk05(self):
         self.log.info("Building join query: FX4PD + PKMC + PK05")
@@ -40,8 +40,8 @@ class DefineForecastValues(SelectInfos):
             raise
 
         try:
-            df = self.select(stmt)
-            self.log.info(f"Select completed — records returned: {df.height()}")
+            df = self.selector.select(stmt)
+            # self.log.info(f"Select completed — records returned: {df.height}")
             return df
 
         except Exception:

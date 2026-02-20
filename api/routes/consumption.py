@@ -14,7 +14,7 @@ def get_to_consume_response(svc: ConsumeValues = Depends(DependeciesInjection.ge
     log.info("GET /consumption/response/to-consume — started getting values to consume")
     try:
         log.info("Successfully obtained values to consume")
-        return svc.values_to_consume()
+        return svc.values_to_consume().to_dicts()
     except Exception as e:
         log.error("Error getting values to consume", exc_info=True)
         raise HTTP_Exceptions().http_502("Error getting values to consume: ", e)
@@ -29,8 +29,7 @@ def update_to_consume(
 
     try:
         df = svc.values_to_consume()
-        log.info(f"Loaded values to consume — amount of registers: {df.height}")
-
+        print("df to consume:", df)
         updated_rows = svc._update_infos(df=df, batch_size=batch_size)
         log.info(f"Successfully executed update — amount of registers: {updated_rows}")
 

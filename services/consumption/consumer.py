@@ -41,7 +41,7 @@ class ConsumeValues:
 
         try:
             lf = self.selector.select(stmt)
-            self.log.info(f"Select completed — records returned: {lf.select(pl.len()).collect().item()}")
+            self.log.info(f"Select completed — records returned: {lf.select(pl.len()).collect()}")
 
         except Exception:
             self.log.error("Error executing SELECT on database", exc_info=True)
@@ -56,7 +56,7 @@ class ConsumeValues:
                     .alias("lb_balance")
                 )
                 .select(["partnumber", "lb_balance"])
-                .collect()
+                # .collect()
             )
 
             self.log.info("Calculation completed — final DataFrame prepared")
@@ -68,10 +68,10 @@ class ConsumeValues:
         return lf.collect()
 
     def _update_infos(self, df: pl.DataFrame, batch_size: int):
-        self.log.info(f"Starting update on PKMC table for {df.height()} records")
+        # self.log.info(f"Starting update on PKMC table for {df.height()} records")
 
         try:
-            self.updater.update_df(
+            updated_rows = self.updater.update_df(
                 table_name="pkmc",
                 df=df,
                 key_column="partnumber",
@@ -79,6 +79,7 @@ class ConsumeValues:
             )
 
             self.log.info("Update completed successfully")
+            return updated_rows
 
         except Exception:
             self.log.error("Error executing update on database", exc_info=True)

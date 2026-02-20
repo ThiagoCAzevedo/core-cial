@@ -53,9 +53,7 @@ class TransformLazyFrame:
 
         try:
             self.lf = lf
-            self.log.info(
-                f"DataFrame received — rows: {lf.height}, columns: {len(lf.columns)}"
-            )
+            self.log.info(f"DataFrame received — rows: {lf.select(pl.len()).collect()}, columns: {len(lf.columns)}")
         except Exception:
             self.log.error("Error initializing DataFrame in TransformDataFrame", exc_info=True)
             raise

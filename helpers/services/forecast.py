@@ -65,10 +65,10 @@ class DependenciesInjection:
             raise
 
     @staticmethod
-    def get_forecast_service() -> DefineForecastValues:
+    def get_forecast_service(db: Session = Depends(get_db)) -> DefineForecastValues:
         DependenciesInjection.log.info("Creating service DefineForecastValues")
         try:
-            return DefineForecastValues()
+            return DefineForecastValues(db)
         except Exception:
             DependenciesInjection.log.error("Error creating DefineForecastValues service", exc_info=True)
             raise

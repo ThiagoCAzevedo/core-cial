@@ -14,9 +14,9 @@ class ReturnFX4PDValues(CleanerBase):
         self.log.info("Loading FX4PD_PATH file as LazyFrame")
 
         try:
-            df = self._load_file("FX4PD_PATH").lazy()
+            lf = self._load_file("FX4PD_PATH").lazy()
             self.log.info("LazyFrame successfully created from FX4PD_PATH")
-            return df
+            return lf
 
         except Exception:
             self.log.error("Error loading FX4PD_PATH file", exc_info=True)

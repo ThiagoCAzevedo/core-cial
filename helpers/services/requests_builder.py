@@ -32,10 +32,10 @@ class DependenciesInjection:
     log = logger("requests_builder")
 
     @staticmethod
-    def get_to_request() -> QuantityToRequest:
+    def get_to_request(db: Session = Depends(get_db)) -> QuantityToRequest:
         DependenciesInjection.log.info("Creating QuantityToRequest service")
         try:
-            return QuantityToRequest()
+            return QuantityToRequest(db)
         except Exception:
             DependenciesInjection.log.error("Error creating QuantityToRequest", exc_info=True)
             raise
@@ -53,7 +53,6 @@ class DependenciesInjection:
     def get_lm01_requester(
         db: Session = Depends(get_db),                
         sap_mgr: SAPSessionManager = Depends(get_sap_session),  
-        qty_svc: QuantityToRequest = Depends(get_to_request)  
     ) -> LM01_Requester:
 
         DependenciesInjection.log.info("Creating LM01_Requester")
@@ -61,13 +60,8 @@ class DependenciesInjection:
         try:
             DependenciesInjection.log.info("Retrieving SAP session")
             sap = sap_mgr.get_session()
-
-            DependenciesInjection.log.info("Calculating quantity_to_request DataFrame")
-            df = qty_svc._define_diference_to_request()
-
-            requester = LM01_Requester(sap, df, db)
+            requester = LM01_Requester(sap, db)
             DependenciesInjection.log.info("LM01_Requester created successfully")
-
             return requester
 
         except Exception:

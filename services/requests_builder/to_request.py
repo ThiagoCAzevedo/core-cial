@@ -7,9 +7,8 @@ from helpers.log.logger import logger
 
 
 class QuantityToRequest:
-    def __init__(self, session):
-        self.session = session
-        self.selector = SelectInfos(session)
+    def __init__(self, db):
+        self.selector = SelectInfos(db)
 
         self.log = logger("request")
         self.log.info("Initializing QuantityToRequest")
@@ -35,6 +34,8 @@ class QuantityToRequest:
         )
 
         df = self.selector.select(stmt)
+
+        print("to request: ", df)
 
         df = df.with_columns([
             (pl.col("total_theoretical_qty") - pl.col("lb_balance"))
