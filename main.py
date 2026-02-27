@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from common.logger import logger
 from modules.assembly.api.routes import router as assembly_router
+from modules.consumption.api.routes import router as consumption_router
 import uvicorn
 
 
@@ -29,6 +30,12 @@ def create_app() -> FastAPI:
         assembly_router,
         prefix="/assembly",
         tags=["assembly-line"]
+    )
+
+    app.include_router(
+        consumption_router,
+        prefix="/consumption",
+        tags=["consumption"]
     )
 
     return app
