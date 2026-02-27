@@ -11,14 +11,7 @@ class AccessAssemblyLineApi:
     def __init__(self):
         self.log = logger("assembly")
         self.log.info("Initializing AccessAssemblyLineApi")
-
-        try:
-            self.al_url = os.getenv("AL_API_ENDPOINT")
-            self.log.info(f"Endpoint loaded: {self.al_url}")
-
-        except Exception:
-            self.log.error("Error loading environment variable: AL_API_ENDPOINT", exc_info=True)
-            raise
+        self.al_url = os.getenv("AL_API_ENDPOINT")
 
     def get_json_response(self):
         self.log.info(f"Sending GET request to {self.al_url}")
@@ -26,7 +19,6 @@ class AccessAssemblyLineApi:
         try:
             response = requests.get(self.al_url, verify=False, timeout=5)
             self.log.info(f"Response received — status code: {response.status_code}")
-
             response.raise_for_status()
 
         except requests.exceptions.Timeout:

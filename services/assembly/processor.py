@@ -6,13 +6,7 @@ class DefineLazyFrame:
     def __init__(self, response: dict):
         self.log = logger("assembly")
         self.log.info("Initializing DefineDataFrame")
-
-        try:
-            self.response = response
-            self.log.info("Response received for processing")
-        except Exception:
-            self.log.error("Error initializing response in DefineDataFrame", exc_info=True)
-            raise
+        self.response = response
 
     def extract_car_records(self):
         self.log.info("Starting CAR record extraction")

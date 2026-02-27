@@ -47,16 +47,11 @@ class UpsertInfos:
     def _upsert_batch(self, table, rows):
         try:
             stmt = insert(table).values(rows)
-
-            # colunas realmente presentes no INSERT
             batch_cols = set(rows[0].keys())
-
-            # pega nome da PK da tabela
             primary_keys = {col.name for col in table.primary_key}
 
             ignore_fields = {"created_at", "updated_at"}
 
-            # somente colunas presentes no batch podem aparecer no UPDATE
             update_cols = {
                 col: stmt.inserted[col]
                 for col in batch_cols

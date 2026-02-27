@@ -11,10 +11,7 @@ log = logger("assembly")
 
 
 @router.get("/response/json", summary="Get response from Assembly Line API")
-def get_json_response(
-    api: AccessAssemblyLineApi = Depends(DependeciesInjection.get_api),
-    limit: int = Query(1, ge=1, le=5),
-):
+def get_json_response(api: AccessAssemblyLineApi = Depends(DependeciesInjection.get_api), limit: int = Query(1, ge=1, le=5)):
     log.info("GET /assembly/response/json — started collecting JSON from Assembly Line API")
 
     try:
@@ -27,10 +24,7 @@ def get_json_response(
 
 
 @router.get("/response/processed", summary="Get processed response from Assembly Line API JSON")
-def get_processed_response(
-    api: AccessAssemblyLineApi = Depends(DependeciesInjection.get_api),
-    limit: int = Query(50, ge=1, le=100000)
-):
+def get_processed_response(api: AccessAssemblyLineApi = Depends(DependeciesInjection.get_api), limit: int = Query(50, ge=1, le=100000)):
     log.info(f"GET /assembly/response/processed — limit={limit}")
 
     try:
