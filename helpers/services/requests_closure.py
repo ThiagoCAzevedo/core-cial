@@ -31,6 +31,13 @@ class LT22_BuildPipeline:
             raise
 
         try:
+            log.info("Renaming PK05 columns")
+            df = cleaner_svc.clean_columns(df)
+        except Exception:
+            log.error("Error renaming PK05 columns", exc_info=True)
+            raise
+
+        try:
             log.info("Creating additional PK05 columns")
             df = cleaner_svc.change_columns_type(df)
         except Exception:

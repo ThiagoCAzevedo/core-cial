@@ -17,6 +17,7 @@ class DefineDataFrame(CleanerBase):
             rows_to_skip = 0
             while True:
                 df = self._load_file("LT22_PATH", rows_to_skip=rows_to_skip, separator="\t")
+                
                 if any("OT" in col for col in df.columns):
                     self.log.info(f"Header found after skipping {rows_to_skip} rows")
                     break

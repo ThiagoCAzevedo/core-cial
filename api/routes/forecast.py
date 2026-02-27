@@ -112,6 +112,7 @@ def upsert_forecast_pipeline(
 
         # FORECAST
         lf_forecast = forecast_svc.join_fx4pd_pkmc_pk05()
+        print()
         rows_forecast = upsert_svc.upsert_df("forecast", lf_forecast, batch_size)
         log.info(f"Forecast upsert completed — rows: {rows_forecast}")
 

@@ -88,7 +88,6 @@ class SelectInfos:
         columns: list[str] = None,
         filters: dict = None
     ):
-        
         if isinstance(query_or_table, Select):
             stmt = query_or_table
             self.log.info("Query recebida já é um SELECT")
@@ -114,6 +113,7 @@ class SelectInfos:
             pass
 
         try:
+            print("aqui no queries:",self.db)
             rows = self.db.execute(stmt).all()
             self.log.info(f"ROWS retornados → {rows[:5]}")
             self.log.info(f"Total de linhas → {len(rows)}")

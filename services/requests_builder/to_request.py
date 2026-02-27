@@ -30,14 +30,15 @@ class QuantityToRequest:
                 PKMC.qty_max_box,
             )
             .join(PK05, PK05.supply_area == PKMC.supply_area)
-            .where(PKMC.lb_balance <= PKMC.qty_for_restock)
+            .where(
+                (PKMC.lb_balance <= PKMC.qty_for_restock) &
+                PK05.takt.isnot(None)
+            )
         )
 
-        df = self.selector.select(stmt)
+        lf = self.selector.select(stmt)
 
-        print("to request: ", df)
-
-        df = df.with_columns([
+        lf = lf.with_columns([
             (pl.col("total_theoretical_qty") - pl.col("lb_balance"))
                 .alias("qty_to_request"),
 
@@ -47,13 +48,14 @@ class QuantityToRequest:
                 .alias("qty_boxes_to_request")
         ])
 
-        df = df.select([
+        lf = lf.select([
             "partnumber",
             "num_reg_circ",
+            "supply_area",
             "qty_to_request",
             "qty_boxes_to_request",
             "takt",
             "rack"
         ])
 
-        return df
+        return lf

@@ -41,6 +41,7 @@ class ConsumeValues:
 
         try:
             lf = self.selector.select(stmt)
+            print("aa lflflflf: ", lf.collect().height)
             self.log.info(f"Select completed — records returned: {lf.select(pl.len()).collect()}")
 
         except Exception:

@@ -20,10 +20,9 @@ class GetQuantityToRequest:
                 RequestsMade.qty_boxes_to_request,
                 RequestsMade.takt,
                 RequestsMade.rack,
-                RequestsMade.num_ot,
+                RequestsMade.num_shipment,
             )
         )
-
         return self.selector.select(stmt)
     
 
@@ -35,7 +34,6 @@ class LM01_Requester:
         self.sap = sap
         self.db = db_session
         self.df = GetQuantityToRequest(db_session).return_quantity().collect()
-
 
     def _request_lm01(self):
         self.log.info("Starting SAP LM01 request")
@@ -80,12 +78,12 @@ class LM01_Requester:
                         session.findById("wnd[0]").sendVKey(0)
                         session.findById("wnd[0]").sendVKey(8)
 
-                        num_ot = ot_reader.get_ot_number()
+                        num_shipment = ot_reader.get_ot_number()
 
-                        if num_ot:
+                        if num_shipment:
                             df_update = pl.DataFrame({
                                 "num_reg_circ": [num_circ],
-                                "num_ot": [num_ot]
+                                "num_shipment": [num_shipment]
                             })
 
                             updater.update_df(

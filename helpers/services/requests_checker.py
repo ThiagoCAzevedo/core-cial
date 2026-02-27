@@ -1,87 +1,73 @@
+from fastapi import Depends
 from services.sap_manager.session_manager import SAPSessionManager
-from services.requests_checker.sp02 import SP02_Session, SP02_Rows, SP02_Actions
-from services.requests_checker.lt22 import LT22_Session, LT22_Selectors, LT22_Parameters, LT22_Submit
+from services.requests_checker.lt22 import LT22_Session, LT22_Parameters, LT22_Submit, ReturnValuesRequestsMade
 from helpers.log.logger import logger
-
-
-# -- SP02 -- 
-class SP02_BuildPipeline:
-    def __init__(self):
-        self.log = logger("requests_checker")
-        self.log.info("Initializing SP02 BuildPipeline")
-
-    @staticmethod
-    def find_lt22(session):
-        log = logger("requests_checker")
-        log.info("Starting LT22 search in SP02")
-
-        try:
-            rows = SP02_Rows(session)
-            log.info("SP02_Rows instance created")
-
-            result = rows.find_lt22_job()
-            log.info("LT22 search completed successfully")
-
-            return result
-
-        except Exception:
-            log.error("Error searching for LT22 job in SP02", exc_info=True)
-            raise
+from sqlalchemy.orm import Session
+from services.requests_checker.verifier_extractor import lt22_has_data
 
 
 # -- LT22 --
-class LT22_BuildPipeline:
-    def __init__(self):
+class LT22_BuildPipeline():
+    def __init__(self, db):
         self.log = logger("requests_checker")
         self.log.info("Initializing LT22 BuildPipeline")
+        self.db = db
 
-    @staticmethod
-    def request(session):
+    def request(self, session):
         log = logger("requests_checker")
         log.info("Starting LT22 pipeline")
 
         try:
-            log.info("Executing LT22 selectors")
-            selectors = LT22_Selectors(session)
-            selectors.expand()
-            selectors.select()
-            selectors.top()
-            selectors.take()
-            log.info("LT22 selectors completed")
-
+            num_shipments = DependenciesInjection.get_num_shipment(self.db)
+            log.info(f"Found {len(num_shipments)} OT(s) to process.")
         except Exception:
-            log.error("Error executing LT22 selectors", exc_info=True)
-            raise
-
+            log.error("Error fetching num_shipment values", exc_info=True)
+            return False
+        
         try:
-            log.info("Configuring LT22 parameters")
-            params = LT22_Parameters(session)
-            params.set_deposit()
-            params.set_b01()
-            params.set_pending_only()
-            params.set_dates_today()
-            params.set_layout()
-            log.info("LT22 parameters configured")
-
+            num_partnumbers = DependenciesInjection.get_partnumber(self.db)
+            log.info(f"Found {len(num_partnumbers)} OT(s) to process.")
         except Exception:
-            log.error("Error configuring LT22 parameters", exc_info=True)
-            raise
+            log.error("Error fetching num_partnumber values", exc_info=True)
+            return False
 
-        try:
-            log.info("Submitting LT22 request")
-            submit = LT22_Submit(session)
-            submit.submit()
-            log.info("LT22 request submitted successfully")
 
-        except Exception:
-            log.error("Error submitting LT22 request", exc_info=True)
-            raise
+        for i in range(len(num_shipments)):
+            try:
+                log.info("Configuring LT22 parameters")
+                params = LT22_Parameters(session)
+                params.set_deposit()
+                params.set_shipment(num_shipments[i])
+                params.set_partnumber(num_partnumbers[i])
+                params.set_b01()
+                params.set_confirmed_only()
+
+            except Exception:
+                continue 
+
+            try:
+                submit = LT22_Submit(session)
+                submit.submit()
+
+            except Exception:
+                continue
+
+        lt22_has_data(session)
 
         return True
 
 
+
 class DependenciesInjection:
     log = logger("requests_checker")
+
+    @staticmethod
+    def get_num_shipment(db: Session):
+        return ReturnValuesRequestsMade(db).get_all_num_shipment()
+
+    @staticmethod
+    def get_partnumber(db: Session):
+        return ReturnValuesRequestsMade(db).get_all_partnumber()
 
     @staticmethod
     def get_sap_session() -> SAPSessionManager:
@@ -92,42 +78,14 @@ class DependenciesInjection:
             DependenciesInjection.log.error("Error creating SAPSessionManager", exc_info=True)
             raise
         
-    # -- SP02 --
-    @staticmethod
-    def get_sp02_session() -> SP02_Session:
-        DependenciesInjection.log.info("Creating SP02_Session")
-        try:
-            return SP02_Session()
-        except Exception:
-            DependenciesInjection.log.error("Error creating SP02_Session", exc_info=True)
-            raise
-
-    @staticmethod
-    def get_sp02_actions() -> SP02_Actions:
-        DependenciesInjection.log.info("Creating SP02_Actions")
-        try:
-            return SP02_Actions()
-        except Exception:
-            DependenciesInjection.log.error("Error creating SP02_Actions", exc_info=True)
-            raise
-
+        
     # -- LT22 --
     @staticmethod
-    def get_lt22_session() -> LT22_Session:
+    def get_lt22_session(sap_mgr: SAPSessionManager = Depends(get_sap_session)) -> LT22_Session:
         DependenciesInjection.log.info("Creating LT22_Session")
         try:
-            return LT22_Session()
+            sap = sap_mgr.get_session()
+            return LT22_Session(sap)
         except Exception:
             DependenciesInjection.log.error("Error creating LT22_Session", exc_info=True)
-            raise
-
-        
-    @staticmethod
-    def get_sap_session():
-        DependenciesInjection.log.info("Retrieving SAPSessionManager class")
-
-        try:
-            return SAPSessionManager
-        except Exception:
-            DependenciesInjection.log.error("Error returning SAPSessionManager", exc_info=True)
             raise

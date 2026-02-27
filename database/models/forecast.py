@@ -6,7 +6,8 @@ from database.database import Base
 class Forecast(Base):
     __tablename__ = "forecast"
 
-    partnumber = Column(String(255), nullable=False, primary_key=True)
+    id = Column(Integer, primary_key=True, index=True)
+    partnumber = Column(String(255), nullable=False)
     num_reg_circ = Column(String(255), nullable=False)
     takt = Column(String(255), nullable=False)
     rack = Column(String(255), nullable=False)
