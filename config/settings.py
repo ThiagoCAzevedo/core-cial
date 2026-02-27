@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     # APP CONFIG
     FILES_DRIVER: str
     APP_URL: str
+    PKMC_URL: str
+    PK05_URL: str
 
     # MYSQL
     MYSQL_HOST: str

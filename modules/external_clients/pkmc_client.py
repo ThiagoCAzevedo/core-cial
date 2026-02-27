@@ -1,10 +1,11 @@
 from common.logger import logger
+from config.settings import settings
 import polars as pl, httpx
 
 
 class PKMC_Client:
-    def __init__(self, base_url: str):
-        self.base_url = base_url
+    def __init__(self):
+        self.base_url = settings.PKMC_URL
         self.log = logger("pkmc-client")
 
     def get_all(self) -> pl.LazyFrame:
