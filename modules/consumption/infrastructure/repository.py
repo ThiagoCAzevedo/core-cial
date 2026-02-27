@@ -1,9 +1,7 @@
 from __future__ import annotations
-
 import polars as pl
 from sqlalchemy import update
 from sqlalchemy.orm import Session
-
 from common.logger import logger
 from modules.consumption.infrastructure.models import Forecast, Assembly, PKMC
 
