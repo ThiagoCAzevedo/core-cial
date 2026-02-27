@@ -10,7 +10,7 @@ class AssemblyPipeline:
         self.log = logger("assembly")
 
     def run(self, client: AssemblyApiClient) -> pl.DataFrame:
-        self.log.info("Pipeline Assembly iniciado")
+        self.log.info("Assembly Pipeline initialized")
 
         raw = client.get_json()
 
@@ -22,5 +22,5 @@ class AssemblyPipeline:
 
         df = lf.collect()
 
-        self.log.info(f"Pipeline finalizado — linhas: {df.height}")
+        self.log.info(f"Assembly Pipeline finished - rows: {df.height}")
         return df

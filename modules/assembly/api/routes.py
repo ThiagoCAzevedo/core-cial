@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from modules.assembly.infrastructure.http_client import AssemblyApiClient
 from modules.assembly.application.pipeline import AssemblyPipeline
 from modules.assembly.infrastructure.repository import AssemblyRepository
-from database.database import get_db
-from common.http_errors import http_500, http_502
+from database.session import get_db
+from common.http_errors import http_500
 
 
 router = APIRouter()
@@ -23,7 +23,7 @@ def get_processed(
         df = AssemblyPipeline().run(client)
         return df.head(limit).to_dicts()
     except Exception as e:
-        raise http_500("Erro ao processar dados", e)
+        raise http_500("Error processing data: ", e)
 
 
 @router.post("/upsert")
@@ -42,4 +42,4 @@ def upsert(
         return {"upserted_rows": total}
 
     except Exception as e:
-        raise http_500("Erro no upsert", e)
+        raise http_500("Upsert error: ", e)

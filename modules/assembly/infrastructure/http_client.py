@@ -28,19 +28,19 @@ class AssemblyApiClient:
             )
             response.raise_for_status()
         except requests.Timeout as e:
-            msg = "Timeout ao acessar Assembly Line API"
+            msg = "Timeout accessing Assembly Line API"
             self.log.error(msg)
             raise msg from e
         except requests.RequestException as e:
-            msg = f"Erro na requisição Assembly Line API: {e}"
+            msg = f"Error requesting Assembly Line API: {e}"
             self.log.error(msg)
             raise msg from e
 
         try:
             data = response.json()
-            self.log.info("JSON recebido com sucesso")
+            self.log.info("JSON successfully received")
             return data
         except ValueError as e:
-            msg = "Erro ao converter resposta para JSON"
+            msg = "Error converting to JSON"
             self.log.error(msg)
             raise msg from e

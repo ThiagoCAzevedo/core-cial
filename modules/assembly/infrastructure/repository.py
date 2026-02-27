@@ -2,7 +2,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 from common.logger import logger
 from modules.assembly.application.dtos import AssemblyRecordDTO
-from modules.assembly.infra.models import AssemblyModel  # opcional, posso gerar para você
+from modules.assembly.infrastructure.models import AssemblyModel
 
 
 class AssemblyRepository:

@@ -12,7 +12,7 @@ class AssemblyLazyExtractor:
         self.response = response
 
     def extract(self) -> pl.LazyFrame:
-        self.log.info("Extraindo registros CAR do JSON")
+        self.log.info("Extracting infos from JSON")
         rows: List[Dict[str, Any]] = []
 
         try:
@@ -40,11 +40,11 @@ class AssemblyLazyExtractor:
                         })
 
             lf = pl.LazyFrame(rows)
-            self.log.info(f"Registros extraídos: {lf.select(pl.len()).collect().item()}")
+            self.log.info(f"JSON Registers: {lf.select(pl.len()).collect().item()}")
             return lf
 
         except Exception as exc:
-            self.log.error("Falha ao extrair registros CAR", exc_info=True)
+            self.log.error("Failed ot extract infos from JSON: ", exc_info=True)
             raise exc
 
 
@@ -54,7 +54,7 @@ class AssemblyLazyTransformer:
         self.log = logger("assembly")
 
     def transform(self) -> pl.LazyFrame:
-        self.log.info("Transformações iniciadas")
+        self.log.info("Initilized tranformations")
 
         try:
             return (
@@ -65,16 +65,16 @@ class AssemblyLazyTransformer:
                 ])
             )
         except Exception as exc:
-            self.log.error("Erro durante transform()", exc_info=True)
+            self.log.error("Error during transform()", exc_info=True)
             raise exc
 
     def attach_fx4pd(self) -> pl.LazyFrame:
-        self.log.info("Criando coluna knr_fx4pd")
+        self.log.info("Creating column knr_fx4pd")
 
         try:
             return self.lf.with_columns(
                 (pl.col("werk") + pl.col("spj") + pl.col("knr")).alias("knr_fx4pd")
             )
         except Exception as exc:
-            self.log.error("Erro ao criar knr_fx4pd", exc_info=True)
+            self.log.error("Error creating knr_fx4pd", exc_info=True)
             raise exc
