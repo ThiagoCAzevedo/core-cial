@@ -1,0 +1,6 @@
+Nº depósito				ANC	Dep Anchieta
+
+
+	St	Nº OT	Material			Tp.	Pos.origem	Hora	Dt.criação	Tp.	Usuário	TUD	QtdTeór DE	PosiçDest	UD destino	HoraCnf	Remessa	HoraCnf	Usuário	Data EM
+
+		2051145489	03C.010830.C			20D	18-50-B	14:05:45	25.02.2026	B01	FV2WL5N	P01	2.000,000	14B5R5P157	800000511392426	11:01:56	8786695018	11:02:41	FV2WL5N	03.10.2025
