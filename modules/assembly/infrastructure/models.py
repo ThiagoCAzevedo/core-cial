@@ -3,7 +3,7 @@ from sqlalchemy.sql import func
 from database.base import Base
 
 
-class AssemblyModel(Base):
+class Assembly(Base):
     __tablename__ = "assembly_line"
 
     knr = Column(String(20), nullable=False, primary_key=True)

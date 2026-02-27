@@ -1,52 +1,23 @@
-from sqlalchemy import select
+from __future__ import annotations
 from common.logger import logger
-from modules.consumption.infrastructure.models import Forecast, Assembly, PKMC
-from modules.consumption.infrastructure.selectors import ConsumptionSelector
-from modules.consumption.infrastructure.repository import ConsumptionUpdater
+from modules.consumption.infrastructure.repository import ConsumptionRepository
 import polars as pl
 
 
 class ConsumptionService:
-    def __init__(self, db):
+    def __init__(self, repo: ConsumptionRepository):
         self.log = logger("consumption")
-        self.selector = ConsumptionSelector(db)
-        self.updater = ConsumptionUpdater(db)
+        self.repo = repo
+        self.log.info("ConsumptionService initialized")
 
-    def values_to_consume(self):
-        self.log.info("Building SQL query for consumption values")
+    def get_values_to_consume(self) -> pl.DataFrame:
+        self.log.info("Fetching values to consume")
+        df = self.repo.fetch_consumption_frame()
+        self.log.info(f"Values retrieved — rows={df.height}")
+        return df
 
-        stmt = (
-            select(
-                Forecast.partnumber, Forecast.takt, Forecast.rack, Forecast.knr_fx4pd,
-                Forecast.qty_usage,
-                Assembly.takt.label("assembly_takt"),
-                PKMC.partnumber.label("pkmc_partnumber"),
-                PKMC.lb_balance,
-            )
-            .join(
-                Assembly,
-                (Forecast.knr_fx4pd == Assembly.knr_fx4pd)
-                & (Forecast.takt == Assembly.takt)
-            )
-            .join(PKMC, PKMC.partnumber == Forecast.partnumber)
-        )
-
-        lf = self.selector.select(stmt)
-
-        lf = (
-            lf.with_columns(
-                (pl.col("lb_balance") - pl.col("qty_usage").fill_null(0))
-                .alias("lb_balance")
-            )
-            .select(["partnumber", "lb_balance"])
-        )
-
-        return lf.collect()
-
-    def update_infos(self, df: pl.DataFrame, batch_size: int):
-        return self.updater.update_df(
-            table_name="pkmc",
-            df=df,
-            key_column="partnumber",
-            batch_size=batch_size,
-        )
+    def update_consumption(self, df: pl.DataFrame, batch_size: int) -> int:
+        self.log.info("Updating consumption values")
+        updated = self.repo.update_consumption(df, batch_size)
+        self.log.info(f"Consumption values updated — rows={updated}")
+        return updated

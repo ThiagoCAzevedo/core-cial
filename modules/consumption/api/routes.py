@@ -12,21 +12,22 @@ def get_service(db: Session = Depends(get_db)):
     return ConsumptionService(db)
 
 
-@router.get("/response/to-consume")
-def get_to_consume_response(
-    service: ConsumptionService = Depends(get_service)
+@router.get("/response/to-consume", summary="Get values to consume")
+def get_to_consume(
+    service: ConsumptionService = Depends(get_service),
+    limit: int = Query(100, ge=1),
 ):
     try:
         df = service.values_to_consume()
-        return df.to_dicts()
+        return df.head(limit).to_dicts()
     except Exception as e:
-        raise http_500("Error getting values to consume: ", e)
+        raise http_500("Error retrieving values to consume: ", e)
 
 
-@router.put("/update/to-consume")
+@router.put("/update/to-consume", summary="Update values consumed")
 def update_to_consume(
-    batch_size: int = Query(10_000, ge=1, le=100_000),
-    service: ConsumptionService = Depends(get_service)
+    batch_size: int = Query(10_000, ge=1),
+    service: ConsumptionService = Depends(get_service),
 ):
     try:
         df = service.values_to_consume()
@@ -39,4 +40,4 @@ def update_to_consume(
         }
 
     except Exception as e:
-        raise http_500("Error updating values to consume: ", e)
+        raise http_500("Error updating consumption values: ", e)
