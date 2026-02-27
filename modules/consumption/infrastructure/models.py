@@ -1,5 +1,5 @@
-from modules.forecast.infrastructure.models import Forecast
-from modules.assembly.infrastructure.models import Assembly
+from database.models.forecast import Forecast
+from database.models.assembly import Assembly
 from modules.pkmc.infrastructure.models import PKMC
 
 
