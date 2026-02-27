@@ -3,13 +3,13 @@ from common.logger import logger
 import polars as pl
 
 
-class FX4PDService(ForecastLoaders):
-    def __init__(self):
-        super().__init__()
+class FX4PDService():
+    def __init__(self, loader: ForecastLoaders):
+        self.loader = loader
         self.log = logger("forecast")
 
     def create_fx4pd_df(self):
-        return self.load_fx4pd()
+        return self.loader.load_fx4pd()
 
     def rename_select_columns(self, df):
         rename_map = {
