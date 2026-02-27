@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     # STORAGE
     STORAGE_PATH: str
     EXCEL_PATH: str
-    SAP_PATH: str
+    SAP_PATH_STORAGE: str
 
     # EXCEL FILES
     PKMC_PATH: str
@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     AL_API_ENDPOINT: str
 
     # SAP LOGIN
+    SAP_PATH: str
     SAP_CONNECTION_NAME: str | None = ""
     SAP_USER: str | None = ""
     SAP_PSWD: str | None = ""

@@ -14,6 +14,17 @@ def get_client():
     return AssemblyApiClient()
 
 
+@router.get("/json")
+def get_json(
+    client: AssemblyApiClient = Depends(get_client),
+    limit: int = Query(1, ge=1, le=5)
+):
+    try:
+        return dict(list(client.get_json().items())[:limit])
+    except Exception as e:
+        raise http_500("Error getting JSON: ", e)
+    
+
 @router.get("/processed")
 def get_processed(
     limit: int = Query(50, ge=1),
