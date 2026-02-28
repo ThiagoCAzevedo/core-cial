@@ -8,8 +8,6 @@ import polars as pl
 
 
 class ForecastService:
-    """Service to calculate forecast values by joining FX4PD, PKMC, and PK05 data"""
-
     def __init__(self, db: Session):
         self.db = db
         self.log = logger("forecast")
@@ -18,21 +16,25 @@ class ForecastService:
         self.log.info("Initializing ForecastService")
 
     def join_fx4pd_pkmc_pk05(self) -> pl.LazyFrame:
-        """Join FX4PD (local DB), PKMC (external API), and PK05 (external API) data"""
         self.log.info("Building join: FX4PD (local DB) + PKMC (external API) + PK05 (external API)")
 
         try:
-            stmt = select(FX4PD)
-            rows_fx4pd = self.db.execute(stmt).mappings().all()
-            df_fx4pd = pl.DataFrame(rows_fx4pd).lazy()
+            stmt = select(
+                FX4PD.knr_fx4pd,
+                FX4PD.partnumber,
+                FX4PD.qty_usage,
+                FX4PD.qty_unit,
+            )
+
+            rows_fx4pd = list(map(dict, self.db.execute(stmt).mappings()))
+            df_fx4pd = pl.from_dicts(rows_fx4pd).lazy()
+
             self.log.info(f"FX4PD loaded: {len(rows_fx4pd)} records")
 
-            # Fetch PKMC and PK05 from external APIs
             lf_pkmc = self.pkmc_client.get_all()
             lf_pk05 = self.pk05_client.get_all()
             self.log.info("PKMC and PK05 fetched from external APIs")
 
-            # Perform joins
             lf = (
                 lf_pkmc
                 .join(lf_pk05, on="supply_area", how="inner")

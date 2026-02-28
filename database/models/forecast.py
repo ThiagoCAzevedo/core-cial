@@ -18,17 +18,16 @@ class FX4PD(Base):
 class Forecast(Base):
     __tablename__ = "forecast"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    partnumber = Column(String(255), nullable=False, index=True)
-    num_reg_circ = Column(String(255), nullable=False)
-    takt = Column(String(255), nullable=False, index=True)
-    rack = Column(String(255), nullable=False, index=True)
+    partnumber = Column(String(50), nullable=False, index=True, primary_key=True)
+    num_reg_circ = Column(String(20), nullable=False)
+    takt = Column(String(10), nullable=False, index=True, primary_key=True)
+    rack = Column(String(10), nullable=False, index=True, primary_key=True)
     lb_balance = Column(Float, nullable=False)
     total_theoretical_qty = Column(Float, nullable=False)
     qty_for_restock = Column(Float, nullable=False)
     qty_per_box = Column(Float, nullable=False)
     qty_max_box = Column(Float, nullable=False)
-    knr_fx4pd = Column(String(255), nullable=False, index=True)
+    knr_fx4pd = Column(String(50), nullable=False, index=True, primary_key=True)
     qty_usage = Column(Float, nullable=False)
     qty_unit = Column(Integer, nullable=False)
 

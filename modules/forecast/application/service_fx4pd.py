@@ -47,20 +47,19 @@ class FX4PDService(CleanerBase):
             self.log.error("Error loading FX4PD_PATH file", exc_info=True)
             raise
 
-    def rename_select_columns(self, df: pl.LazyFrame) -> pl.LazyFrame:
-        """Rename FX4PD DataFrame columns"""
+    def rename_select_columns(self, lf: pl.LazyFrame) -> pl.LazyFrame:
         self.log.info("Renaming FX4PD DataFrame columns")
         try:
-            df_collected = df.collect()
-            rename_map = {
-                df_collected.columns[0]: "knr_fx4pd",
-                df_collected.columns[1]: "partnumber",
-                df_collected.columns[5]: "qty_usage",
-                df_collected.columns[6]: "qty_unit",
-            }
-            df = self._rename(df_collected, rename_map).lazy()
-            self.log.info("Columns renamed successfully")
-            return df
+
+            cols = list(lf.schema.keys())
+
+            return lf.select([
+                pl.col(cols[0]).alias("knr_fx4pd"),
+                pl.col(cols[1]).alias("partnumber"),
+                pl.col(cols[5]).alias("qty_usage"),
+                pl.col(cols[6]).alias("qty_unit"),
+            ])
+
         except Exception:
             self.log.error("Error renaming columns in FX4PD", exc_info=True)
             raise

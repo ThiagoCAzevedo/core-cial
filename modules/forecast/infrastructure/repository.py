@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.mysql import insert
 from common.logger import logger
+from database.models.forecast import FX4PD
 import polars as pl
 
 
@@ -26,7 +27,6 @@ class ForecastRepository:
             total = len(rows)
             self.log.info(f"Total records for UPSERT: {total}")
 
-            from database.models.fx4pd import FX4PD
             sql_table = FX4PD.__table__
 
             for i in range(0, total, batch_size):

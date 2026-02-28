@@ -37,7 +37,7 @@ class BuffALService:
             raise
 
         try:
-            rows = self.db.execute(stmt).all()
+            rows = self.db.execute(stmt).mappings().all()
             df = pl.DataFrame(rows)
             lf = df.lazy()
 

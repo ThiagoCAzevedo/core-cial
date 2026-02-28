@@ -10,8 +10,6 @@ load_dotenv("config/.env")
 
 
 class SAP_Launcher:
-    """Handles starting and connecting to SAP GUI"""
-
     def __init__(self):
         self.log = logger("sap_manager")
         self.log.info("Initializing SAP_Launcher")

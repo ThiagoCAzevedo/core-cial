@@ -12,19 +12,13 @@ class CleanerBase:
     def _load_file(
         self, 
         settings_key: str, 
-        rows_to_skip: int = 0, 
-        separator: str = ","
     ) -> pl.DataFrame:
         """Load a file using Polars from a settings key path"""
         try:
             file_path = getattr(settings, settings_key)
             self.log.info(f"Loading file from {settings_key}: {file_path}")
             
-            df = pl.read_csv(
-                file_path,
-                skip_rows=rows_to_skip,
-                separator=separator
-            )
+            df = pl.read_excel(file_path)
             
             self.log.info(f"File loaded successfully: {df.shape[0]} rows, {df.shape[1]} columns")
             return df

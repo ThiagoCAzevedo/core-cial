@@ -103,7 +103,7 @@ def upsert_pipeline(
     try:
         # FX4PD
         lf_fx4pd = fx4pd_svc.pipeline()
-        total_fx4pd = lf_fx4pd.select(pl.len()).collect().item()
+        total_fx4pd = lf_fx4pd.select(pl.len()).item()
         repo.bulk_upsert_fx4pd(lf_fx4pd, batch_size)
         log.info(f"FX4PD upsert completed — {total_fx4pd} rows")
 
