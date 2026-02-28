@@ -3,6 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from common.logger import logger
 from modules.assembly.api.routes import router as assembly_router
 from modules.consumption.api.routes import router as consumption_router
+from modules.forecast.api.routes import router as forecast_router
+from modules.requests_builder.api.routes import router as requests_builder_router
+from modules.requests_checker.api.routes import router as requests_checker_router
+from modules.requests_closure.api.routes import router as requests_closure_router
+from modules.sap_manager.api.routes import router as sap_manager_router
 import uvicorn
 
 
@@ -38,6 +43,36 @@ def create_app() -> FastAPI:
         tags=["consumption"]
     )
 
+    app.include_router(
+        forecast_router,
+        prefix="/forecast",
+        tags=["forecast"]
+    )
+
+    app.include_router(
+        requests_builder_router,
+        prefix="/requests-builder",
+        tags=["requests-builder"]
+    )
+
+    app.include_router(
+        requests_checker_router,
+        prefix="/requests-checker",
+        tags=["requests-checker"]
+    )
+
+    app.include_router(
+        requests_closure_router,
+        prefix="/requests-closure",
+        tags=["requests-closure"]
+    )
+
+    app.include_router(
+        sap_manager_router,
+        prefix="/sap-manager",
+        tags=["sap-manager"]
+    )
+
     return app
 
 
@@ -49,6 +84,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="127.0.0.1",
-        port=8000,
+        port=8002,
         reload=True
     )

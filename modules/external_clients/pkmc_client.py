@@ -9,11 +9,27 @@ class PKMC_Client:
         self.log = logger("pkmc-client")
 
     def get_all(self) -> pl.LazyFrame:
-        url = f"{self.base_url}/pkmc/all"
         try:
-            resp = httpx.get(url, timeout=30)
+            get_url = f"{self.base_url.rstrip('/')}/db"
+            self.log.info(f"Fetching PKMC data from {get_url}")
+            resp = httpx.get(get_url, timeout=30)
             resp.raise_for_status()
-            return pl.DataFrame(resp.json()).lazy()
+            data = resp.json()
+            self.log.info(f"Successfully fetched {len(data)} PKMC records")
+            return pl.DataFrame(data).lazy()
         except Exception as e:
-            self.log.error("Error fetching PKMC", exc_info=True)
+            self.log.error(f"Error fetching PKMC from {get_url}", exc_info=True)
+            raise e
+
+    def update(self, records: list[dict]) -> dict:
+        try:
+            update_url = f"{self.base_url.rstrip('/')}/update"
+            self.log.info(f"Updating {len(records)} PKMC records via {update_url}")
+            resp = httpx.post(update_url, json=records, timeout=30)
+            resp.raise_for_status()
+            result = resp.json()
+            self.log.info(f"Successfully updated PKMC records: {result}")
+            return result
+        except Exception as e:
+            self.log.error(f"Error updating PKMC via {update_url}", exc_info=True)
             raise e

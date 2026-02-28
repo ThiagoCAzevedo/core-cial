@@ -1,6 +1,6 @@
 from sqlalchemy import Column, String, Integer, Float, DateTime
 from sqlalchemy.sql import func
-from core.database.base import Base
+from database.base import Base
 
 
 class FX4PD(Base):

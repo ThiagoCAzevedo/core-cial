@@ -1,7 +1,5 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Query, Depends
 from sqlalchemy.orm import Session
-import polars as pl
-from modules.forecast.application.pipeline import ForecastPipeline
 from modules.forecast.application.service_fx4pd import FX4PDService
 from modules.forecast.application.service_buf_al import BuffALService
 from modules.forecast.application.service_forecast import ForecastService
@@ -9,6 +7,7 @@ from modules.forecast.infrastructure.repository import ForecastRepository
 from common.http_errors import http_500
 from common.logger import logger
 from database.session import get_db
+import polars as pl
 
 
 router = APIRouter()
@@ -18,11 +17,14 @@ log = logger("forecast")
 def get_fx4pd_service():
     return FX4PDService()
 
+
 def get_buff_al_service(db: Session = Depends(get_db)):
     return BuffALService(db)
 
+
 def get_forecast_service(db: Session = Depends(get_db)):
     return ForecastService(db)
+
 
 def get_repo(db: Session = Depends(get_db)):
     return ForecastRepository(db)

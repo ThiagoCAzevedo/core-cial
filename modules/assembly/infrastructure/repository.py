@@ -2,7 +2,7 @@ from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.orm import Session
 from common.logger import logger
 from modules.assembly.application.dtos import AssemblyRecordDTO
-from modules.assembly.infrastructure.models import AssemblyModel
+from modules.assembly.infrastructure.models import Assembly
 
 
 class AssemblyRepository:
@@ -16,11 +16,11 @@ class AssemblyRepository:
             for i in range(0, len(records), batch_size):
                 batch = records[i:i + batch_size]
 
-                stmt = insert(AssemblyModel).values(batch)
+                stmt = insert(Assembly).values(batch)
                 ignore_cols = ["knr", "created_at", "updated_at"]
                 update_stmt = {
                     col.name: stmt.inserted[col.name]
-                    for col in AssemblyModel.__table__.columns
+                    for col in Assembly.__table__.columns
                     if col.name not in ignore_cols
                 }
 
