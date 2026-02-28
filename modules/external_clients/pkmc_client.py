@@ -28,6 +28,7 @@ class PKMC_Client:
             resp = httpx.post(update_url, json=records, timeout=30)
             resp.raise_for_status()
             result = resp.json()
+
             self.log.info(f"Successfully updated PKMC records: {result}")
             return result
         except Exception as e:

@@ -96,7 +96,7 @@ class QuantityToRequestService:
                 on_duplicate = {
                     col.name: stmt.inserted[col.name]
                     for col in RequestsMade.__table__.columns
-                    if col.name not in ["id", "created_at", "updated_at"]
+                    if col.name not in ["id", "created_at", "updated_at", "num_shipment"]
                 }
                 stmt = stmt.on_duplicate_key_update(on_duplicate)
 

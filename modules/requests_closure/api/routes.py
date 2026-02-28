@@ -41,16 +41,15 @@ def update_and_delete_lt22(
         total_rows = df.select(pl.len()).collect().item()
         log.info(f"LT22 processed — total rows: {total_rows}")
 
-        svc.update_lb_balance(df, batch_size)
+        svc.update_lb_balance(df)
         log.info("lb_balance update executed successfully")
 
-        svc.delete_requests_made(df, batch_size)
+        svc.delete_requests_made(df)
         log.info("Requests made cleanup completed")
 
         return {
             "message": "Update and delete completed successfully.",
             "rows_processed": total_rows,
-            "batch_size": batch_size,
         }
     except Exception as e:
         log.error("Error in update/delete operation", exc_info=True)

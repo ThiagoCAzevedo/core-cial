@@ -4,15 +4,9 @@ from datetime import datetime, timedelta
 from database.models.requests_made import RequestsMade
 from common.logger import logger
 import os
-from dotenv import load_dotenv
-
-
-load_dotenv("config/.env")
 
 
 class LT22Service:
-    """Service to handle SAP LT22 warehouse transfer execution"""
-
     def __init__(self, sap, db: Session):
         self.sap = sap
         self.db = db
@@ -20,7 +14,6 @@ class LT22Service:
         self.log.info("Initializing LT22Service")
 
     def open_lt22(self):
-        """Open LT22 transaction in SAP"""
         self.log.info("Opening SAP transaction /nLT22")
         if not self.sap:
             raise Exception("No SAP session available")
@@ -34,7 +27,6 @@ class LT22Service:
             raise
 
     def request_lt22(self) -> bool:
-        """Execute LT22 request pipeline"""
         self.log.info("Starting LT22 pipeline")
 
         if not self.sap:
@@ -47,21 +39,34 @@ class LT22Service:
             raise
 
         try:
-            # Get requests data
-            num_shipments = self._get_num_shipments()
-            self.log.info(f"Found {len(num_shipments)} shipment(s) to process.")
+            mapping = self._get_shipments_with_partnumbers()
 
-            # Configure parameters
-            params = LT22_Parameters(session)
-            params.set_deposit()
-            params.set_b01()
-            params.set_confirmed_only()
-            params.set_dates_today()
-            params.set_layout()
+            self.log.info(f"Found {len(mapping)} shipments to process.")
 
-            # Submit request
-            submit = LT22_Submit(session)
-            submit.submit()
+            for shipment, partnumbers in mapping.items():
+
+                if not partnumbers:
+                    self.log.warning(f"No partnumbers found for shipment {shipment}")
+                    continue
+
+                self.log.info(f"Shipment {shipment}: {len(partnumbers)} partnumbers found")
+
+                for partnumber in partnumbers:
+
+                    self.log.info(f"Processing shipment={shipment} | partnumber={partnumber}")
+
+                    params = LT22_Parameters(session)
+                    params.set_deposit()
+                    params.set_shipment(shipment)
+                    params.set_partnumber(partnumber)
+                    params.set_b01()
+                    params.set_confirmed_only()
+                    params.set_dates_today()
+                    params.set_layout()
+
+                    submit = LT22_Submit(session)
+                    submit.submit()
+                    submit.extract_lt22()
 
             self.log.info("LT22 pipeline completed successfully")
             return True
@@ -70,19 +75,30 @@ class LT22Service:
             self.log.error("Error executing LT22 pipeline", exc_info=True)
             raise
 
-    def _get_num_shipments(self):
-        """Retrieve all shipment numbers from requests_made table"""
+    def _get_shipments_with_partnumbers(self):
         try:
-            stmt = select(RequestsMade.num_shipment)
+            stmt = select(RequestsMade.num_shipment, RequestsMade.partnumber)
             rows = self.db.execute(stmt).all()
-            return [row[0] for row in rows if row[0]]
+
+            mapping = {}
+
+            for shipment, partnumber in rows:
+                if shipment is None or partnumber is None:
+                    continue
+
+                if shipment not in mapping:
+                    mapping[shipment] = []
+
+                mapping[shipment].append(partnumber)
+
+            return mapping
+
         except Exception:
-            self.log.error("Error fetching shipment numbers", exc_info=True)
+            self.log.error("Error fetching shipment/partnumber mapping", exc_info=True)
             raise
 
 
 class LT22_Parameters:
-    """Helper class to set LT22 transaction parameters in SAP"""
 
     def __init__(self, session):
         self.log = logger("requests_checker")
@@ -98,6 +114,28 @@ class LT22_Parameters:
             self.log.error("Error setting deposit ANC in LT22", exc_info=True)
             raise
 
+    def set_shipment(self, num_shipment):
+        self.session.findById("wnd[0]/tbar[1]/btn[16]").press()
+        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").expandNode("         68")
+        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").selectNode("        218")
+        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").topNode = "        212"
+        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").doubleClickNode("        218")
+        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/txt%%DYN001-LOW").text = num_shipment
+        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/txt%%DYN001-LOW").setFocus()
+        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/txt%%DYN001-LOW").caretPosition = 9
+        self.session.findById("wnd[0]").sendVKey(0)
+ 
+    def set_partnumber(self, partnumber):
+        self.session.findById("wnd[0]/tbar[1]/btn[16]").press
+        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").expandNode("         68")
+        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").selectNode("         74")
+        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").topNode = "         71"
+        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").doubleClickNode("         74")
+        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN001-LOW").text = partnumber
+        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN001-LOW").setFocus()
+        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN001-LOW").caretPosition = 18
+        self.session.findById("wnd[0]").sendVKey(0)
+ 
     def set_b01(self):
         self.log.info("Setting filter B01 for LT22")
         try:
@@ -143,8 +181,6 @@ class LT22_Parameters:
 
 
 class LT22_Submit:
-    """Helper class to submit LT22 requests"""
-
     def __init__(self, session):
         self.log = logger("requests_checker")
         self.log.info("Initializing LT22_Submit")
@@ -159,8 +195,11 @@ class LT22_Submit:
             self.log.error("Error submitting LT22", exc_info=True)
             raise
 
-
-def get_lt22_storage_path() -> str:
-    """Get full path for LT22 output file storage"""
-    base = os.environ.get("USERPROFILE", os.path.expanduser("~"))
-    return os.path.join(base, ".000 - Projetos", "auto-line-feeding", "backend", "core", "storage", "sap")
+    def extract_lt22(self):
+        self.session.findById("wnd[0]/tbar[1]/btn[9]").press()
+        self.session.findById("wnd[1]/usr/subSUBSCREEN_STEPLOOP:SAPLSPO5:0150/sub:SAPLSPO5:0150/radSPOPLI-SELFLAG[1,0]").select()
+        self.session.findById("wnd[1]/tbar[0]/btn[0]").press()
+        self.session.findById("wnd[1]/usr/ctxtDY_PATH").text = os.path.join(os.environ["USERPROFILE"], ".000 - Projetos", "auto-line-feeding", "backend", "core", "storage", "sap")
+        self.session.findById("wnd[1]/usr/ctxtDY_FILENAME").text = "lt22.txt"
+        self.session.findById("wnd[0]/tbar[1]/btn[9]").press()
+        self.session.findById("wnd[1]/tbar[0]/btn[0]").press()

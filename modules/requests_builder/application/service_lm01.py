@@ -2,13 +2,11 @@ from database.models.requests_made import RequestsMade
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from common.logger import logger
-import polars as pl
-import re
+from sqlalchemy import update
+import polars as pl, re
 
 
 class LM01RequesterService:
-    """Service to handle SAP LM01 purchase order requests"""
-
     def __init__(self, sap, db: Session):
         self.sap = sap
         self.db = db
@@ -17,7 +15,6 @@ class LM01RequesterService:
         self._load_requests_data()
 
     def _load_requests_data(self):
-        """Load requests to process from database"""
         try:
             stmt = select(
                 RequestsMade.partnumber,
@@ -28,15 +25,18 @@ class LM01RequesterService:
                 RequestsMade.rack,
                 RequestsMade.num_shipment,
             )
-            rows = self.db.execute(stmt).all()
-            self.df = pl.DataFrame(rows)
+
+            result = self.db.execute(stmt)
+            rows = [tuple(r) for r in result]
+            columns = result.keys()
+            self.df = pl.DataFrame(rows, schema=columns)
+
             self.log.info(f"Loaded {len(rows)} records for SAP LM01")
         except Exception:
             self.log.error("Error loading requests data", exc_info=True)
             raise
 
     def request_lm01(self) -> int:
-        """Execute LM01 request for all parts needing restocking"""
         self.log.info("Starting SAP LM01 request")
 
         if not self.sap:
@@ -76,13 +76,8 @@ class LM01RequesterService:
                         session.findById("wnd[0]").sendVKey(0)
                         session.findById("wnd[0]").sendVKey(8)
 
-                        num_shipment = self._get_ot_number(session)
-
+                        num_shipment = self._get_shipment_number(session)
                         if num_shipment:
-                            df_update = pl.DataFrame({
-                                "num_reg_circ": [num_circ],
-                                "num_shipment": [num_shipment]
-                            })
                             self._update_shipment_number(num_circ, num_shipment)
                         else:
                             self.log.warning(f"No OT returned for {num_circ}")
@@ -101,7 +96,7 @@ class LM01RequesterService:
 
         return rows_requested
 
-    def _get_ot_number(self, session) -> str | None:
+    def _get_shipment_number(self, session) -> str | None:
         """Extract order number from SAP LM01 response"""
         try:
             msg = session.findById("wnd[0]/usr/txtGV_300_MSG2").Text
@@ -120,21 +115,20 @@ class LM01RequesterService:
             return None
 
     def _update_shipment_number(self, num_circ: str, num_shipment: str):
-        """Update shipment number in requests_made table"""
         try:
-            from sqlalchemy.dialects.mysql import insert
-            
-            batch = [{"num_reg_circ": num_circ, "num_shipment": num_shipment}]
-            stmt = insert(RequestsMade).values(batch)
-            on_duplicate = {
-                col.name: stmt.inserted[col.name]
-                for col in RequestsMade.__table__.columns
-                if col.name not in ["id", "created_at", "updated_at"]
-            }
-            stmt = stmt.on_duplicate_key_update(on_duplicate)
+            self.log.info(f"Updating shipment number in DB: {num_circ} → {num_shipment}")
 
-            self.db.execute(stmt)
+            stmt = (
+                update(RequestsMade)
+                .where(RequestsMade.num_reg_circ == num_circ)
+                .values(num_shipment=num_shipment)
+            )
+
+            result = self.db.execute(stmt)
             self.db.commit()
+
+            if result.rowcount == 0:
+                self.log.warning(f"No row found to update (num_reg_circ={num_circ})")
 
         except Exception:
             self.log.error(f"Error updating shipment number for {num_circ}", exc_info=True)
