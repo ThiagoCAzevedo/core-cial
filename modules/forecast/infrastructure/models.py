@@ -1,0 +1,1 @@
+# This file is deprecated - models are imported directly from database.models
