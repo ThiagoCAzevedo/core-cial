@@ -19,7 +19,9 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 from database.base import Base
-from database.models import *
+from modules.assembly.domain.models import Assembly
+from modules.forecast.domain.models import FX4PD, Forecast
+from modules.requests_builder.domain.models import RequestsMade
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

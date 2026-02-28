@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.mysql import insert
-from database.models.requests_made import RequestsMade
+from modules.requests_builder.domain.models import RequestsMade
 from modules.external_clients.pkmc_client import PKMC_Client
 from modules.external_clients.pk05_client import PK05_Client
 from common.logger import logger

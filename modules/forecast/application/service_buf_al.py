@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from database.models.assembly import Assembly
+from modules.assembly.domain.models import Assembly
 from common.logger import logger
 import polars as pl
 

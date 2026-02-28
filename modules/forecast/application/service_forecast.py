@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from database.models.forecast import FX4PD
+from modules.forecast.domain.models import FX4PD
 from modules.external_clients.pkmc_client import PKMC_Client
 from modules.external_clients.pk05_client import PK05_Client
 from common.logger import logger

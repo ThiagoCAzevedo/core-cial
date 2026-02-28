@@ -1,9 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
-from database.models.requests_made import RequestsMade
+from modules.requests_builder.domain.models import RequestsMade
 from common.logger import logger
-import os
+from modules.requests_checker.application.lt22_parameters import LT22_Parameters
+from modules.requests_checker.application.lt22_submit import LT22_Submit
 
 
 class LT22Service:
@@ -15,6 +15,88 @@ class LT22Service:
 
     def open_lt22(self):
         self.log.info("Opening SAP transaction /nLT22")
+        if not self.sap:
+            raise Exception("No SAP session available")
+
+        try:
+            session, _ = self.sap.run_transaction("/nLT22")
+            self.log.info("LT22 session opened successfully")
+            return session
+        except Exception:
+            self.log.error("Error opening SAP transaction /nLT22", exc_info=True)
+            raise
+
+    def request_lt22(self) -> bool:
+        self.log.info("Starting LT22 pipeline")
+
+        if not self.sap:
+            raise Exception("No SAP session available")
+
+        try:
+            session = self.open_lt22()
+        except Exception:
+            self.log.error("Error opening LT22", exc_info=True)
+            raise
+
+        try:
+            mapping = self._get_shipments_with_partnumbers()
+
+            self.log.info(f"Found {len(mapping)} shipments to process.")
+
+            for shipment, partnumbers in mapping.items():
+
+                if not partnumbers:
+                    self.log.warning(f"No partnumbers found for shipment {shipment}")
+                    continue
+
+                self.log.info(f"Shipment {shipment}: {len(partnumbers)} partnumbers found")
+
+                for partnumber in partnumbers:
+
+                    self.log.info(f"Processing shipment={shipment} | partnumber={partnumber}")
+
+                    params = LT22_Parameters(session)
+                    params.set_deposit()
+                    params.set_shipment(shipment)
+                    params.set_partnumber(partnumber)
+                    params.set_b01()
+                    params.set_confirmed_only()
+                    params.set_dates_today()
+                    params.set_layout()
+
+                    submit = LT22_Submit(session)
+                    submit.submit()
+                    submit.extract_lt22()
+
+            self.log.info("LT22 pipeline completed successfully")
+            return True
+
+        except Exception:
+            self.log.error("Error executing LT22 pipeline", exc_info=True)
+            raise
+
+    def _get_shipments_with_partnumbers(self):
+        try:
+            stmt = select(RequestsMade.num_shipment, RequestsMade.partnumber)
+            rows = self.db.execute(stmt).all()
+
+            mapping = {}
+
+            for shipment, partnumber in rows:
+                if shipment is None or partnumber is None:
+                    continue
+
+                if shipment not in mapping:
+                    mapping[shipment] = []
+
+                mapping[shipment].append(partnumber)
+
+            return mapping
+
+        except Exception:
+            self.log.error("Error fetching shipment/partnumber mapping", exc_info=True)
+            raise
+
         if not self.sap:
             raise Exception("No SAP session available")
 

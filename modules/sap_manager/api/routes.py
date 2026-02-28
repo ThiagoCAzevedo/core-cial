@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from modules.sap_manager.application.session_manager import SAPSessionManager
-from modules.sap_manager.application.service_sap_client import SAP_Client
+from modules.sap_manager.application.sap_client import SAP_Client
 from common.http_errors import http_500
 from common.logger import logger
 
