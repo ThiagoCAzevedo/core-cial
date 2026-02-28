@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from modules.forecast.domain.models import Forecast
 from modules.assembly.domain.models import Assembly
-from modules.external_clients.pkmc_client import PKMC_Client
+from modules.consumption.infrastructure.pkmc_adapter import PKMC_Client
 from common.logger import logger
 import polars as pl
 

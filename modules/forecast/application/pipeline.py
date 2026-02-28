@@ -1,1 +1,0 @@
-# This file is deprecated - use FX4PDService.pipeline() and ForecastService.join_fx4pd_pkmc_pk05() directly

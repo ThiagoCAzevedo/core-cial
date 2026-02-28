@@ -2,7 +2,7 @@ from common.logger import logger
 from sqlalchemy import select, delete as sql_delete
 from sqlalchemy.orm import Session
 from modules.requests_builder.domain.models import RequestsMade
-from modules.external_clients.pkmc_client import PKMC_Client
+from modules.requests_closure.infrastructure.pkmc_adapter import PKMC_Client
 from modules.requests_closure.application.lt22_data_loader import DefineDataFrame
 from modules.requests_closure.application.lt22_data_cleaner import CleanDataFrame
 import polars as pl

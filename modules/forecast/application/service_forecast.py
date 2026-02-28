@@ -1,8 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from modules.forecast.domain.models import FX4PD
-from modules.external_clients.pkmc_client import PKMC_Client
-from modules.external_clients.pk05_client import PK05_Client
+from modules.forecast.infrastructure.pkmc_client import PKMC_Client
+from modules.forecast.infrastructure.pk05_client import PK05_Client
 from common.logger import logger
 import polars as pl
 

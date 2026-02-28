@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.mysql import insert
 from modules.requests_builder.domain.models import RequestsMade
-from modules.external_clients.pkmc_client import PKMC_Client
-from modules.external_clients.pk05_client import PK05_Client
+from modules.requests_builder.infrastructure.pkmc_adapter import PKMC_Client
+from modules.requests_builder.infrastructure.pk05_adapter import PK05_Client
 from common.logger import logger
 import polars as pl
 
