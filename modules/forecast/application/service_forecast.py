@@ -8,6 +8,7 @@ import polars as pl
 
 
 class ForecastService:
+    """Service to calculate forecast values by joining FX4PD, PKMC, and PK05 data"""
 
     def __init__(self, db: Session):
         self.db = db
@@ -17,6 +18,7 @@ class ForecastService:
         self.log.info("Initializing ForecastService")
 
     def join_fx4pd_pkmc_pk05(self) -> pl.LazyFrame:
+        """Join FX4PD (local DB), PKMC (external API), and PK05 (external API) data"""
         self.log.info("Building join: FX4PD (local DB) + PKMC (external API) + PK05 (external API)")
 
         try:

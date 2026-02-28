@@ -5,20 +5,6 @@ from config.settings import settings
 from common.logger import logger
 
 
-def remove_none_values(data: Dict[str, Any]) -> Dict[str, Any]:
-    return {k: v for k, v in data.items() if v is not None}
-
-
-def strip_strings(data: Dict[str, Any]) -> Dict[str, Any]:
-    new = {}
-    for k, v in data.items():
-        if isinstance(v, str):
-            new[k] = v.strip()
-        else:
-            new[k] = v
-    return new
-
-
 class CleanerBase:
     def __init__(self):
         self.log = logger("cleaner")
@@ -29,6 +15,7 @@ class CleanerBase:
         rows_to_skip: int = 0, 
         separator: str = ","
     ) -> pl.DataFrame:
+        """Load a file using Polars from a settings key path"""
         try:
             file_path = getattr(settings, settings_key)
             self.log.info(f"Loading file from {settings_key}: {file_path}")
@@ -50,16 +37,7 @@ class CleanerBase:
         df: pl.DataFrame, 
         rename_map: Dict[str, str]
     ) -> pl.DataFrame:
-        """
-        Rename DataFrame columns
-        
-        Args:
-            df: Input DataFrame
-            rename_map: Mapping of old column names to new names
-        
-        Returns:
-            pl.DataFrame: DataFrame with renamed columns
-        """
+        """Rename DataFrame columns based on mapping"""
         try:
             df = df.rename(rename_map)
             self.log.info(f"Columns renamed successfully: {list(rename_map.values())}")

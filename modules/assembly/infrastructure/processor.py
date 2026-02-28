@@ -44,7 +44,7 @@ class AssemblyLazyExtractor:
             return lf
 
         except Exception as exc:
-            self.log.error("Failed ot extract infos from JSON: ", exc_info=True)
+            self.log.error("Failed to extract infos from JSON: ", exc_info=True)
             raise exc
 
 
@@ -54,7 +54,7 @@ class AssemblyLazyTransformer:
         self.log = logger("assembly")
 
     def transform(self) -> pl.LazyFrame:
-        self.log.info("Initilized tranformations")
+        self.log.info("Initialized transformations")
 
         try:
             return (

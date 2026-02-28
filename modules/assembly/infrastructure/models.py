@@ -1,3 +1,1 @@
-from database.models.assembly import Assembly
-
-__all__ = ["Assembly"]
+# This file is deprecated - models are imported directly from database.models

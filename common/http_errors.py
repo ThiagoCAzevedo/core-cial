@@ -5,33 +5,25 @@ from common.logger import logger
 log = logger("http")
 
 
-def http_400(msg: str, exc: Exception | None = None):
-    log.error(f"400 — {msg}", exc_info=bool(exc))
-    raise HTTPException(
-        status_code=400,
-        detail=f"{msg}: {exc}" if exc else msg,
-    )
+def http_400(msg: str, detail: str | Exception | None = None):
+    error_detail = f"{msg}: {detail}" if detail else msg
+    log.error(f"400 — {error_detail}")
+    raise HTTPException(status_code=400, detail=str(error_detail))
 
 
-def http_404(msg: str, exc: Exception | None = None):
-    log.error(f"404 — {msg}", exc_info=bool(exc))
-    raise HTTPException(
-        status_code=404,
-        detail=f"{msg}: {exc}" if exc else msg,
-    )
+def http_404(msg: str, detail: str | Exception | None = None):
+    error_detail = f"{msg}: {detail}" if detail else msg
+    log.error(f"404 — {error_detail}")
+    raise HTTPException(status_code=404, detail=str(error_detail))
 
 
-def http_500(msg: str, exc: Exception | None = None):
-    log.error(f"500 — {msg}", exc_info=bool(exc))
-    raise HTTPException(
-        status_code=500,
-        detail=f"{msg}: {exc}" if exc else msg,
-    )
+def http_500(msg: str, detail: str | Exception | None = None):
+    error_detail = f"{msg}: {detail}" if detail else msg
+    log.error(f"500 — {error_detail}")
+    raise HTTPException(status_code=500, detail=str(error_detail))
 
 
-def http_502(msg: str, exc: Exception | None = None):
-    log.error(f"502 — {msg}", exc_info=bool(exc))
-    raise HTTPException(
-        status_code=502,
-        detail=f"{msg}: {exc}" if exc else msg,
-    )
+def http_502(msg: str, detail: str | Exception | None = None):
+    error_detail = f"{msg}: {detail}" if detail else msg
+    log.error(f"502 — {error_detail}")
+    raise HTTPException(status_code=502, detail=str(error_detail))

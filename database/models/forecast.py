@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Float, DateTime
+from sqlalchemy import Column, String, Integer, Float, DateTime, Index
 from sqlalchemy.sql import func
 from database.base import Base
 
@@ -8,8 +8,8 @@ class FX4PD(Base):
 
     knr_fx4pd = Column(String(255), nullable=False, primary_key=True)
     partnumber = Column(String(255), nullable=False, primary_key=True)
-    qty_usage = Column(Float, nullable=False, primary_key=True)
-    qty_unit = Column(Integer, nullable=False, primary_key=True)
+    qty_usage = Column(Float, nullable=False)
+    qty_unit = Column(Integer, nullable=False)
 
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
@@ -18,17 +18,17 @@ class FX4PD(Base):
 class Forecast(Base):
     __tablename__ = "forecast"
 
-    id = Column(Integer, primary_key=True, index=True)
-    partnumber = Column(String(255), nullable=False)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    partnumber = Column(String(255), nullable=False, index=True)
     num_reg_circ = Column(String(255), nullable=False)
-    takt = Column(String(255), nullable=False)
-    rack = Column(String(255), nullable=False)
+    takt = Column(String(255), nullable=False, index=True)
+    rack = Column(String(255), nullable=False, index=True)
     lb_balance = Column(Float, nullable=False)
     total_theoretical_qty = Column(Float, nullable=False)
     qty_for_restock = Column(Float, nullable=False)
     qty_per_box = Column(Float, nullable=False)
     qty_max_box = Column(Float, nullable=False)
-    knr_fx4pd = Column(String(255), nullable=False, primary_key=True)
+    knr_fx4pd = Column(String(255), nullable=False, index=True)
     qty_usage = Column(Float, nullable=False)
     qty_unit = Column(Integer, nullable=False)
 

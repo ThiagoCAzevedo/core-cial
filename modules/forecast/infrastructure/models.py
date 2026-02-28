@@ -1,4 +1,1 @@
-from database.models.forecast import Forecast, FX4PD
-
-
-__all__ = ["Forecast", "FX4PD"]
+# This file is deprecated - models are imported directly from database.models

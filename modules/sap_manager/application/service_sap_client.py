@@ -27,7 +27,7 @@ class SAP_Launcher:
         self.log.info("Starting SAP GUI client")
         try:
             path = self.sap_path.strip('"')
-            shell = __import__("win32com.client", fromlist=["Dispatch"]).Dispatch("WScript.Shell")
+            shell = win32com.client.Dispatch("WScript.Shell")
             shell.Run(f'"{path}"')
             time.sleep(5)
             self.log.info("SAP GUI started successfully")

@@ -2,7 +2,7 @@ from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.orm import Session
 from common.logger import logger
 from modules.assembly.application.dtos import AssemblyRecordDTO
-from modules.assembly.infrastructure.models import Assembly
+from database.models.assembly import Assembly
 
 
 class AssemblyRepository:

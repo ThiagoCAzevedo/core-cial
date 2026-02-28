@@ -35,10 +35,13 @@ def get_buffer_al(
     svc: BuffALService = Depends(get_buff_al_service),
     limit: int = Query(100, ge=1)
 ):
+    log.info(f"GET /forecast/response/buffer-al — limit={limit}")
     try:
         df = svc.return_values_from_db().collect()
+        log.info(f"Buffer AL values retrieved successfully — {df.height} rows")
         return df.head(limit).to_dicts()
     except Exception as e:
+        log.error("Error getting buffer AL values", exc_info=True)
         raise http_500("Error getting buffer AL values: ", e)
 
 
@@ -47,11 +50,13 @@ def get_fx4pd(
     svc: FX4PDService = Depends(get_fx4pd_service),
     limit: int = Query(100, ge=1),
 ):
+    log.info(f"GET /forecast/response/fx4pd — limit={limit}")
     try:
-        lf = ForecastPipeline().build_fx4pd(svc)
-        df = lf.collect()
+        df = svc.pipeline()
+        log.info(f"FX4PD values retrieved successfully — {df.height} rows total")
         return df.head(limit).to_dicts()
     except Exception as e:
+        log.error("Error getting FX4PD values", exc_info=True)
         raise http_500("Error getting FX4PD values: ", e)
 
 
@@ -61,11 +66,14 @@ def upsert_fx4pd(
     fx4pd: FX4PDService = Depends(get_fx4pd_service),
     repo: ForecastRepository = Depends(get_repo),
 ):
+    log.info(f"POST /forecast/upsert/fx4pd — batch_size={batch_size}")
     try:
-        lf = ForecastPipeline().build_fx4pd(fx4pd)
-        rows = repo.upsert_df("fx4pd", lf, batch_size)
+        lf = fx4pd.pipeline()
+        rows = repo.bulk_upsert_fx4pd(lf, batch_size)
+        log.info(f"FX4PD upsert completed successfully — {rows} rows inserted")
         return {"rows": rows, "batch_size": batch_size}
     except Exception as e:
+        log.error("Error during FX4PD upsert", exc_info=True)
         raise http_500("Error during FX4PD upsert: ", e)
 
 
@@ -74,10 +82,13 @@ def get_result(
     svc: ForecastService = Depends(get_forecast_service),
     limit: int = Query(100, ge=1)
 ):
+    log.info(f"GET /forecast/result — limit={limit}")
     try:
         df = svc.join_fx4pd_pkmc_pk05().collect()
+        log.info(f"Forecast result retrieved successfully — {df.height} rows total")
         return df.head(limit).to_dicts()
     except Exception as e:
+        log.error("Error getting forecast result", exc_info=True)
         raise http_500("Error getting forecast result: ", e)
 
 
@@ -88,15 +99,18 @@ def upsert_pipeline(
     forecast_svc: ForecastService = Depends(get_forecast_service),
     repo: ForecastRepository = Depends(get_repo),
 ):
+    log.info(f"POST /forecast/upsert — batch_size={batch_size}")
     try:
         # FX4PD
-        lf_fx4pd = ForecastPipeline().build_fx4pd(fx4pd_svc)
+        lf_fx4pd = fx4pd_svc.pipeline()
         total_fx4pd = lf_fx4pd.select(pl.len()).collect().item()
-        repo.upsert_df("fx4pd", lf_fx4pd, batch_size)
+        repo.bulk_upsert_fx4pd(lf_fx4pd, batch_size)
+        log.info(f"FX4PD upsert completed — {total_fx4pd} rows")
 
         # FORECAST
         lf_forecast = forecast_svc.join_fx4pd_pkmc_pk05()
-        total_forecast = repo.upsert_df("forecast", lf_forecast, batch_size)
+        total_forecast = repo.bulk_upsert_forecast(lf_forecast, batch_size)
+        log.info(f"Forecast upsert completed — {total_forecast} rows")
 
         return {
             "rows": {
@@ -107,4 +121,5 @@ def upsert_pipeline(
         }
 
     except Exception as e:
+        log.error("Error in final forecast upsert", exc_info=True)
         raise http_500("Error in final forecast upsert: ", e)

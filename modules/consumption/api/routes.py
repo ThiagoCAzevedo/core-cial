@@ -18,14 +18,15 @@ def get_consume_service(db: Session = Depends(get_db)) -> ConsumeValuesService:
 def get_to_consume_response(svc: ConsumeValuesService = Depends(get_consume_service)):
     log.info("GET /consumption/response/to-consume — started getting values to consume")
     try:
-        log.info("Successfully obtained values to consume")
-        return svc.values_to_consume().to_dicts()
+        df = svc.values_to_consume()
+        log.info(f"Successfully obtained values to consume — {df.height} rows")
+        return df.to_dicts()
     except Exception as e:
         log.error("Error getting values to consume", exc_info=True)
         raise http_500("Error getting values to consume: ", e)
 
 
-@router.put("/update/to-consume", summary="Update values consumed")
+@router.put("/update/to-consume", summary="Update values consumed via external API")
 def update_to_consume(
     batch_size: int = Query(10_000, ge=1, le=100_000),
     svc: ConsumeValuesService = Depends(get_consume_service),
@@ -34,12 +35,14 @@ def update_to_consume(
 
     try:
         df = svc.values_to_consume()
-        updated_rows = svc.update_infos(df=df, batch_size=batch_size)
-        log.info(f"Successfully executed update — amount of registers: {updated_rows}")
+        log.info(f"Calculated consumption values — {df.height} rows to update")
+        
+        result = svc.update_infos(df=df, batch_size=batch_size)
+        log.info(f"Successfully executed update via external PKMC API — {result['total_records']} records")
 
         return {
-            "message": "Successfully executed update.",
-            "rows_updated": updated_rows,
+            "message": "Successfully updated consumption values via external PKMC API.",
+            "data": result,
             "batch_size": batch_size,
         }
 

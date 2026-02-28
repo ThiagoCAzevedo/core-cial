@@ -8,6 +8,7 @@ import polars as pl
 
 
 class ConsumeValuesService:
+    """Service to calculate and apply consumption values from Forecast and Assembly data"""
 
     def __init__(self, db: Session):
         self.db = db
@@ -92,51 +93,42 @@ class ConsumeValuesService:
 
         return lf.collect()
 
-    def update_infos(self, df: pl.DataFrame) -> dict:
-        self.log.info(f"Starting update on PKMC via external API for {df.height} records")
-
-        try:
-            rows = df.to_dicts()
-            result = self.pkmc_client.update(rows)
-            self.log.info(f"Update completed successfully: {result}")
-            return result
-
-        except Exception:
-            self.log.error("Error updating PKMC via external API", exc_info=True)
-            raise
-
-    def update_infos(self, df: pl.DataFrame, batch_size: int) -> int:
-        self.log.info(f"Starting update on PKMC table for {df.height} records")
+    def update_infos(self, df: pl.DataFrame, batch_size: int = 10000) -> dict:
+        """Update PKMC via external API with consumption values
+        
+        Args:
+            df: DataFrame with partnumber and updated lb_balance
+            batch_size: Number of records to send per API request
+            
+        Returns:
+            Result from external API
+        """
+        self.log.info(f"Starting update on PKMC via external API for {df.height} records — batch_size={batch_size}")
 
         try:
             rows = df.to_dicts()
             total = len(rows)
+            self.log.info(f"Total records to update: {total}")
 
-            self.log.info(f"Total records for UPDATE: {total}")
-
-            updated_count = 0
+            # Process in batches
+            all_results = []
             for i in range(0, total, batch_size):
                 batch = rows[i : i + batch_size]
-                self.log.info(f"UPDATE batch {i} - {i + len(batch)}")
+                self.log.info(f"UPDATE batch {i} - {i + len(batch)} via external API")
 
-                for row in batch:
-                    update_stmt = (
-                        select(PKMC)
-                        .where(PKMC.partnumber == row["partnumber"])
-                    )
-                    pkmc_record = self.db.execute(update_stmt).scalar_one_or_none()
+                result = self.pkmc_client.update(batch)
+                all_results.append(result)
+                self.log.info(f"Batch update result: {result}")
 
-                    if pkmc_record:
-                        pkmc_record.lb_balance = row["lb_balance"]
-                        updated_count += 1
-
-                self.db.commit()
-
-            self.log.info("Update completed successfully")
-            return updated_count
+            self.log.info(f"Update completed successfully — {total} records updated via external API")
+            return {
+                "status": "success",
+                "total_records": total,
+                "batches_processed": len(all_results),
+                "results": all_results
+            }
 
         except Exception:
-            self.db.rollback()
-            self.log.error("Error executing update on database", exc_info=True)
+            self.log.error("Error updating PKMC via external API", exc_info=True)
             raise
 

@@ -22,8 +22,6 @@ class Settings(BaseSettings):
     SAP_PATH_STORAGE: str
 
     # EXCEL FILES
-    PKMC_PATH: str
-    PK05_PATH: str
     FX4PD_PATH: str
 
     # SAP
