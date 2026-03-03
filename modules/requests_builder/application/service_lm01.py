@@ -1,4 +1,4 @@
-from database.models.requests_made import RequestsMade
+from modules.requests_builder.domain.models import RequestsMade
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from common.logger import logger

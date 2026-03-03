@@ -1,63 +1,39 @@
-from sqlalchemy import select
 from sqlalchemy.orm import Session
-from database.models.forecast import FX4PD
-from modules.external_clients.pkmc_client import PKMC_Client
-from modules.external_clients.pk05_client import PK05_Client
 from common.logger import logger
 import polars as pl
+from modules.forecast.infrastructure.pkmc_client import PKMC_Client
+from modules.forecast.infrastructure.pk05_client import PK05_Client
+from modules.forecast.infrastructure.repositories import (
+    SQLAlchemyForecastRepository,
+    ExternalClientsRepository,
+)
+from modules.forecast.application.use_cases import BuildForecastDataUseCase
 
 
 class ForecastService:
+    """Service to build forecast data from multiple sources
+    
+    This service delegates business logic to use cases and accesses data via repositories,
+    reducing direct coupling to infrastructure.
+    """
+
     def __init__(self, db: Session):
         self.db = db
         self.log = logger("forecast")
-        self.pkmc_client = PKMC_Client()
-        self.pk05_client = PK05_Client()
+        self._initialize_dependencies()
         self.log.info("Initializing ForecastService")
 
+    def _initialize_dependencies(self) -> None:
+        """Initialize repositories and use cases"""
+        # Create repositories
+        forecast_repo = SQLAlchemyForecastRepository(self.db)
+        pkmc_client = PKMC_Client()
+        pk05_client = PK05_Client()
+        external_repo = ExternalClientsRepository(pkmc_client, pk05_client)
+        
+        # Create use case with injected dependencies
+        self.forecast_usecase = BuildForecastDataUseCase(forecast_repo, external_repo)
+
     def join_fx4pd_pkmc_pk05(self) -> pl.LazyFrame:
-        self.log.info("Building join: FX4PD (local DB) + PKMC (external API) + PK05 (external API)")
-
-        try:
-            stmt = select(
-                FX4PD.knr_fx4pd,
-                FX4PD.partnumber,
-                FX4PD.qty_usage,
-                FX4PD.qty_unit,
-            )
-
-            rows_fx4pd = list(map(dict, self.db.execute(stmt).mappings()))
-            df_fx4pd = pl.from_dicts(rows_fx4pd).lazy()
-
-            self.log.info(f"FX4PD loaded: {len(rows_fx4pd)} records")
-
-            lf_pkmc = self.pkmc_client.get_all()
-            lf_pk05 = self.pk05_client.get_all()
-            self.log.info("PKMC and PK05 fetched from external APIs")
-
-            lf = (
-                lf_pkmc
-                .join(lf_pk05, on="supply_area", how="inner")
-                .join(df_fx4pd, on="partnumber", how="inner")
-                .select([
-                    "num_reg_circ",
-                    "takt",
-                    "rack",
-                    "lb_balance",
-                    "partnumber",
-                    "total_theoretical_qty",
-                    "qty_for_restock",
-                    "qty_per_box",
-                    "qty_max_box",
-                    "knr_fx4pd",
-                    "qty_usage",
-                    "qty_unit",
-                ])
-            )
-
-            self.log.info("Join completed successfully")
-            return lf
-
-        except Exception:
-            self.log.error("Error joining FX4PD + PKMC + PK05", exc_info=True)
-            raise
+        """Build forecast data via use case"""
+        return self.forecast_usecase.execute()

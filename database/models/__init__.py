@@ -1,5 +1,6 @@
-from database.models.assembly import Assembly
-from database.models.forecast import FX4PD, Forecast
-from database.models.requests_made import RequestsMade
+from modules.assembly.domain.models import Assembly
+from modules.forecast.domain.models import FX4PD, Forecast
+from modules.requests_builder.domain.models import RequestsMade
 
 __all__ = ["Assembly", "FX4PD", "Forecast", "RequestsMade"]
+
