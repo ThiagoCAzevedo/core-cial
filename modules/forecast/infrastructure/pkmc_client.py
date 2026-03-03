@@ -10,7 +10,7 @@ class PKMC_Client:
 
     def get_all(self) -> pl.LazyFrame:
         try:
-            get_url = f"{self.base_url.rstrip('/')}/db"
+            get_url = f"{self.base_url.rstrip('/')}/response/db"
             self.log.info(f"Fetching PKMC data from {get_url}")
             resp = httpx.get(get_url, timeout=30)
             resp.raise_for_status()
@@ -23,7 +23,7 @@ class PKMC_Client:
 
     def update(self, records: list[dict]) -> dict:
         try:
-            update_url = f"{self.base_url.rstrip('/')}/update"
+            update_url = f"{self.base_url.rstrip('/')}/upsert"
             self.log.info(f"Updating {len(records)} PKMC records via {update_url}")
             resp = httpx.post(update_url, json=records, timeout=30)
             resp.raise_for_status()
