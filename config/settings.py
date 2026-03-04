@@ -4,22 +4,24 @@ from pydantic import Field
 
 class Settings(BaseSettings):
     # APP CONFIG
-    FILES_DRIVER: str
+    APP_NAME: str
     APP_URL: str
+    FILES_DRIVER: str
+
     PKMC_URL: str
     PK05_URL: str
 
     # MYSQL
     MYSQL_HOST: str
-    MYSQL_PORT: int = Field(default=3306)
+    MYSQL_PORT: int
     MYSQL_USER: str
-    MYSQL_PSWD: str | None = ""
+    MYSQL_PSWD: str
     MYSQL_DATABASE: str
 
     # STORAGE
     STORAGE_PATH: str
-    EXCEL_PATH: str
-    SAP_PATH_STORAGE: str
+    EXCEL_STORAGE_PATH: str
+    SAP_STORAGE_PATH: str
 
     # EXCEL FILES
     FX4PD_PATH: str
@@ -32,9 +34,9 @@ class Settings(BaseSettings):
 
     # SAP LOGIN
     SAP_PATH: str
-    SAP_CONNECTION_NAME: str | None = ""
-    SAP_USER: str | None = ""
-    SAP_PSWD: str | None = ""
+    SAP_CONNECTION_NAME: str
+    SAP_USER: str
+    SAP_PSWD: str
 
     class Config:
         env_file = "config/.env"
