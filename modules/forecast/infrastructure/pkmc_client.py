@@ -12,25 +12,29 @@ class PKMC_Client:
         try:
             get_url = f"{self.base_url.rstrip('/')}/response/db"
             self.log.info(f"Fetching PKMC data from {get_url}")
+
             resp = httpx.get(get_url, timeout=30)
             resp.raise_for_status()
-            data = resp.json()
-            self.log.info(f"Successfully fetched {len(data)} PKMC records")
-            return pl.DataFrame(data).lazy()
+
+            payload = resp.json()
+
+            if isinstance(payload, dict) and "data" in payload:
+                records = payload["data"]
+            elif isinstance(payload, list):
+                records = payload
+            else:
+                raise ValueError(
+                    f"Invalid PKMC response, expected list or dict['data'], got: {payload}"
+                )
+
+            if not isinstance(records, list):
+                raise ValueError(
+                    f"Invalid PKMC response 'data' field, expected list, got: {records}"
+                )
+
+            self.log.info(f"Successfully fetched {len(records)} PKMC records")
+            return pl.DataFrame(records).lazy()
+
         except Exception as e:
             self.log.error(f"Error fetching PKMC from {get_url}", exc_info=True)
-            raise e
-
-    def update(self, records: list[dict]) -> dict:
-        try:
-            update_url = f"{self.base_url.rstrip('/')}/upsert"
-            self.log.info(f"Updating {len(records)} PKMC records via {update_url}")
-            resp = httpx.post(update_url, json=records, timeout=30)
-            resp.raise_for_status()
-            result = resp.json()
-
-            self.log.info(f"Successfully updated PKMC records: {result}")
-            return result
-        except Exception as e:
-            self.log.error(f"Error updating PKMC via {update_url}", exc_info=True)
             raise e

@@ -26,7 +26,7 @@ def get_to_consume_response(svc: ConsumeValuesService = Depends(get_consume_serv
         raise http_500("Error getting values to consume: ", e)
 
 
-@router.put("/update/to-consume", summary="Update values consumed via external API")
+@router.patch("/update/to-consume", summary="Update values consumed via external API")
 def update_to_consume(
     batch_size: int = Query(10_000, ge=1, le=100_000),
     svc: ConsumeValuesService = Depends(get_consume_service),

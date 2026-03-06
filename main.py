@@ -19,7 +19,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="Auto Line Feeding API",
-        description="Main backend core responsible for powering the services of the Auto Line Feeding system.",
+        description="Core microservice responsible for powering all main services to CIAL system",
         docs_url="/core-docs",
     )
 

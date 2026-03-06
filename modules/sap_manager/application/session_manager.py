@@ -2,14 +2,12 @@ from common.logger import logger
 
 
 class SAPSessionManager:
-    """Class-level session manager for SAP connection"""
 
     session = None
     log = logger("sap_manager")
 
     @classmethod
     def set_session(cls, sess):
-        """Store SAP session for reuse"""
         cls.log.info("Setting SAP session in SessionManager")
         try:
             cls.session = sess
@@ -20,7 +18,6 @@ class SAPSessionManager:
 
     @classmethod
     def get_session(cls):
-        """Retrieve stored SAP session"""
         cls.log.info("Retrieving SAP session from SessionManager")
         try:
             if cls.session is None:

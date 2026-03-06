@@ -1,4 +1,4 @@
-"""Repository pattern for requests_builder module"""
+from sqlalchemy import text
 from abc import ABC, abstractmethod
 from typing import List, Optional
 import polars as pl
@@ -42,12 +42,11 @@ class SQLAlchemyRequestsRepository(RequestsRepository):
         return len(records)
     
     def get_all_requests(self) -> List[dict]:
-        """Retrieve all request records"""
-        from sqlalchemy import select
+        query_str = f"SELECT * FROM requests_made"
         
-        stmt = select(RequestsMade)
-        rows = self.db.execute(stmt).mappings().all()
-        return [dict(row) for row in rows]
+        result = self.db.execute(text(query_str))
+        records = [dict(row) for row in result.mappings().all()]
+        return records
 
 
 class ExternalDataRepository(ABC):

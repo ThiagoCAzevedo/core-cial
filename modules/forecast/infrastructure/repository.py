@@ -14,7 +14,6 @@ class ForecastRepository:
         self.log.info("Initializing ForecastRepository")
 
     def bulk_upsert_fx4pd(self, lf: pl.LazyFrame | pl.DataFrame, batch_size: int = 10000) -> int:
-        """Bulk upsert FX4PD records"""
         self.log.info("Starting UPSERT operation for FX4PD table")
 
         try:

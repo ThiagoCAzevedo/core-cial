@@ -12,11 +12,28 @@ class PK05_Client:
         try:
             get_url = f"{self.base_url.rstrip('/')}/response/db"
             self.log.info(f"Fetching PK05 data from {get_url}")
+
             resp = httpx.get(get_url)
             resp.raise_for_status()
-            data = resp.json()
-            self.log.info(f"Successfully fetched {len(data)} PK05 records")
-            return pl.DataFrame(data).lazy()
+
+            payload = resp.json()
+
+            # A API NÃO RETORNA LISTA — E SIM UM OBJETO COM DATA
+            if not isinstance(payload, dict) or "data" not in payload:
+                raise ValueError(
+                    f"Invalid PK05 response, expected dict with 'data' but got: {payload}"
+                )
+
+            records = payload["data"]
+
+            if not isinstance(records, list):
+                raise ValueError(
+                    f"Invalid PK05 response 'data' field, expected list but got: {records}"
+                )
+
+            self.log.info(f"Successfully fetched {len(records)} PK05 records")
+            return pl.DataFrame(records).lazy()
+
         except Exception as e:
             self.log.error(f"Error fetching PK05 from {get_url}", exc_info=True)
             raise e

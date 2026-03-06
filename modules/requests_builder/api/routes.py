@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from modules.requests_builder.application.service_to_request import QuantityToRequestService
 from modules.requests_builder.application.service_lm01 import LM01RequesterService
 from modules.sap_manager.application.session_manager import SAPSessionManager
+from modules.requests_builder.infrastructure.repositories import SQLAlchemyRequestsRepository
 from database.session import get_db
 from common.http_errors import http_500, http_400
 from common.logger import logger
@@ -38,6 +39,18 @@ def get_to_request(
     except Exception as e:
         log.error("Error fetching values to request", exc_info=True)
         raise http_500("Error fetching values to request: ", e)
+    
+
+@router.get("/response/requests-made/db", summary="Get values requested")
+def get_requests_made(db: Session = Depends(get_db)):
+    try:
+        repo = SQLAlchemyRequestsRepository(db)
+        records = repo.get_all_requests()
+        return records
+
+    except Exception as e:
+        log.error(f"Failed to fetch from database: {str(e)}", exc_info=True)
+        raise http_500("Error fetching requested values: ", e)
 
 
 @router.post("/upsert/to-request", summary="Upsert 'to request' values into the database")

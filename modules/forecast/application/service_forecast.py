@@ -11,12 +11,6 @@ from modules.forecast.application.use_cases import BuildForecastDataUseCase
 
 
 class ForecastService:
-    """Service to build forecast data from multiple sources
-    
-    This service delegates business logic to use cases and accesses data via repositories,
-    reducing direct coupling to infrastructure.
-    """
-
     def __init__(self, db: Session):
         self.db = db
         self.log = logger("forecast")
@@ -24,16 +18,13 @@ class ForecastService:
         self.log.info("Initializing ForecastService")
 
     def _initialize_dependencies(self) -> None:
-        """Initialize repositories and use cases"""
-        # Create repositories
         forecast_repo = SQLAlchemyForecastRepository(self.db)
         pkmc_client = PKMC_Client()
         pk05_client = PK05_Client()
         external_repo = ExternalClientsRepository(pkmc_client, pk05_client)
         
-        # Create use case with injected dependencies
         self.forecast_usecase = BuildForecastDataUseCase(forecast_repo, external_repo)
 
     def join_fx4pd_pkmc_pk05(self) -> pl.LazyFrame:
-        """Build forecast data via use case"""
-        return self.forecast_usecase.execute()
+        lf = self.forecast_usecase.execute()
+        return lf

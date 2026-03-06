@@ -21,22 +21,15 @@ class CalculateConsumptionUseCase:
         self.log = logger("consumption-usecase")
     
     def execute(self) -> pl.DataFrame:
-        """Calculate consumption values from multiple sources
-        
-        Returns:
-            DataFrame with partnumber and updated lb_balance
-        """
         self.log.info("Starting consumption calculation use case")
         
         try:
-            # Fetch data from repositories
             df_forecast = self.consumption_repo.get_forecast_data()
             df_assembly = self.consumption_repo.get_assembly_data()
             lf_pkmc = self.external_repo.get_pkmc_data()
             
             self.log.info("All data sources fetched successfully")
-            
-            # Join and calculate
+
             lf = (
                 df_forecast
                 .join(
@@ -47,24 +40,14 @@ class CalculateConsumptionUseCase:
                 )
                 .join(
                     lf_pkmc,
-                    left_on="partnumber",
-                    right_on="partnumber",
-                    how="inner"
+                    on="partnumber",
+                    how="inner",
+                    suffix="_pkmc"
                 )
-                .select([
-                    "partnumber",
-                    "takt",
-                    "rack",
-                    "knr_fx4pd",
-                    "qty_usage",
-                    "assembly_takt",
-                    "lb_balance"
-                ])
             )
             
             self.log.info("Joins completed successfully")
             
-            # Calculate new balance
             lf = (
                 lf.with_columns(
                     (pl.col("lb_balance") - pl.col("qty_usage").fill_null(0))

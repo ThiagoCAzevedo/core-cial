@@ -39,19 +39,27 @@ class SQLAlchemyConsumptionRepository(ConsumptionRepository):
             Forecast.qty_usage,
         )
         rows = self.db.execute(stmt).mappings().all()
-        return pl.DataFrame(rows).lazy()
+
+        columns = {key: [row[key] for row in rows] for key in rows[0].keys()}
+
+        df = pl.DataFrame(columns)
+        return df.lazy()
     
     def get_assembly_data(self) -> pl.LazyFrame:
-        """Retrieve assembly data from database"""
         from sqlalchemy import select
-        
+
         stmt = select(
             Assembly.knr_fx4pd,
             Assembly.takt.label("assembly_takt"),
         )
-        rows = self.db.execute(stmt).mappings().all()
-        return pl.DataFrame(rows).lazy()
 
+        rows = self.db.execute(stmt).mappings().all()
+
+        columns = {key: [row[key] for row in rows] for key in rows[0].keys()}
+
+        df = pl.DataFrame(columns)
+
+        return df.lazy()
 
 class ExternalDataRepository(ABC):
     """Abstract repository for external API data"""

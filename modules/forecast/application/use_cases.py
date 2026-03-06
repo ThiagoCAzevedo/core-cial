@@ -53,8 +53,9 @@ class BuildForecastDataUseCase:
                     "qty_usage",
                     "qty_unit",
                 ])
+                .filter(pl.col("lb_balance") <= pl.col("qty_for_restock"))
             )
-            
+
             self.log.info("Forecast data built successfully")
             return lf
             
