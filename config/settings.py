@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     APP_URL: str
     FILES_DRIVER: str
 
+    USER_PROFILE: str
+
     PKMC_URL: str
     PK05_URL: str
 
@@ -31,12 +33,6 @@ class Settings(BaseSettings):
 
     # ASSEMBLY LINE CONFIG
     AL_API_ENDPOINT: str
-
-    # SAP LOGIN
-    SAP_PATH: str
-    SAP_CONNECTION_NAME: str
-    SAP_USER: str
-    SAP_PSWD: str
 
     class Config:
         env_file = "config/.env"

@@ -26,6 +26,8 @@ class LT22ProcessService:
             df = cleaner.rename_columns(df)
             df = cleaner.clean_columns(df)
             df = cleaner.change_columns_type(df)
+            self.update_lb_balance(df)
+            self.delete_requests_made(df)
 
             self.log.info("LT22 pipeline completed")
             return df

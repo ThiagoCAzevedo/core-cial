@@ -1,5 +1,6 @@
 from common.utils.cleaner import CleanerBase
 from common.logger import logger
+import polars as pl
 
 
 class CleanDataFrame(CleanerBase):
@@ -11,7 +12,6 @@ class CleanDataFrame(CleanerBase):
     def clean_columns(self, df):
         self.log.info("Cleaning and sanitizing columns: partnumber, num_ot")
         try:
-            import polars as pl
             
             df = df.with_columns(
                 pl.col("partnumber")
@@ -46,7 +46,6 @@ class CleanDataFrame(CleanerBase):
     def change_columns_type(self, df):
         self.log.info("Casting request_date and request_hour columns")
         try:
-            import polars as pl
             
             df = df.with_columns(
                 pl.col("request_date").str.strptime(pl.Date, format="%d.%m.%Y", strict=False),

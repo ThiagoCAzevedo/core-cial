@@ -1,9 +1,14 @@
+from config.settings import settings
+from database import session
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from modules.requests_builder.domain.models import RequestsMade
 from common.logger import logger
 from modules.requests_checker.application.lt22_parameters import LT22_Parameters
 from modules.requests_checker.application.lt22_submit import LT22_Submit
+from datetime import datetime, timedelta
+from modules.requests_closure.application.service_lt22_process import LT22ProcessService
+import os
 
 
 class LT22Service:
@@ -52,13 +57,14 @@ class LT22Service:
                 self.log.info(f"Shipment {shipment}: {len(partnumbers)} partnumbers found")
 
                 for partnumber in partnumbers:
-
+                    self.open_lt22()
                     self.log.info(f"Processing shipment={shipment} | partnumber={partnumber}")
-
                     params = LT22_Parameters(session)
                     params.set_deposit()
+
                     params.set_shipment(shipment)
                     params.set_partnumber(partnumber)
+
                     params.set_b01()
                     params.set_confirmed_only()
                     params.set_dates_today()
@@ -66,7 +72,12 @@ class LT22Service:
 
                     submit = LT22_Submit(session)
                     submit.submit()
-                    submit.extract_lt22()
+                    has_export = submit.extract_lt22()
+                    print("haaaaaaaaaaaaaaaaas:", has_export)
+                    if has_export == False:
+                        self.log.info(f"LT22 executed but no data found for shipment={shipment} | partnumber={partnumber}")
+                        continue
+                    LT22ProcessService.process_lt22_pipeline()
 
             self.log.info("LT22 pipeline completed successfully")
             return True
@@ -75,87 +86,6 @@ class LT22Service:
             self.log.error("Error executing LT22 pipeline", exc_info=True)
             raise
 
-    def _get_shipments_with_partnumbers(self):
-        try:
-            stmt = select(RequestsMade.num_shipment, RequestsMade.partnumber)
-            rows = self.db.execute(stmt).all()
-
-            mapping = {}
-
-            for shipment, partnumber in rows:
-                if shipment is None or partnumber is None:
-                    continue
-
-                if shipment not in mapping:
-                    mapping[shipment] = []
-
-                mapping[shipment].append(partnumber)
-
-            return mapping
-
-        except Exception:
-            self.log.error("Error fetching shipment/partnumber mapping", exc_info=True)
-            raise
-
-        if not self.sap:
-            raise Exception("No SAP session available")
-
-        try:
-            session, _ = self.sap.run_transaction("/nLT22")
-            self.log.info("LT22 session opened successfully")
-            return session
-        except Exception:
-            self.log.error("Error opening SAP transaction /nLT22", exc_info=True)
-            raise
-
-    def request_lt22(self) -> bool:
-        self.log.info("Starting LT22 pipeline")
-
-        if not self.sap:
-            raise Exception("No SAP session available")
-
-        try:
-            session = self.open_lt22()
-        except Exception:
-            self.log.error("Error opening LT22", exc_info=True)
-            raise
-
-        try:
-            mapping = self._get_shipments_with_partnumbers()
-
-            self.log.info(f"Found {len(mapping)} shipments to process.")
-
-            for shipment, partnumbers in mapping.items():
-
-                if not partnumbers:
-                    self.log.warning(f"No partnumbers found for shipment {shipment}")
-                    continue
-
-                self.log.info(f"Shipment {shipment}: {len(partnumbers)} partnumbers found")
-
-                for partnumber in partnumbers:
-
-                    self.log.info(f"Processing shipment={shipment} | partnumber={partnumber}")
-
-                    params = LT22_Parameters(session)
-                    params.set_deposit()
-                    params.set_shipment(shipment)
-                    params.set_partnumber(partnumber)
-                    params.set_b01()
-                    params.set_confirmed_only()
-                    params.set_dates_today()
-                    params.set_layout()
-
-                    submit = LT22_Submit(session)
-                    submit.submit()
-                    submit.extract_lt22()
-
-            self.log.info("LT22 pipeline completed successfully")
-            return True
-
-        except Exception:
-            self.log.error("Error executing LT22 pipeline", exc_info=True)
-            raise
 
     def _get_shipments_with_partnumbers(self):
         try:
@@ -190,34 +120,44 @@ class LT22_Parameters:
     def set_deposit(self):
         self.log.info("Setting deposit ANC in LT22")
         try:
-            self.session.findById("wnd[0]/usr/ctxtT3_LGNUM").Text = "ANC"
+            self.session.findById("wnd[0]/usr/ctxtT3_LGNUM").text= "ANC"
             self.log.info("Deposit ANC set successfully")
-        except Exception:
-            self.log.error("Error setting deposit ANC in LT22", exc_info=True)
+        except Exception as e:
+            self.log.error("Error setting deposit ANC in LT22: %s", e, exc_info=True)
             raise
 
     def set_shipment(self, num_shipment):
-        self.session.findById("wnd[0]/tbar[1]/btn[16]").press()
-        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").expandNode("         68")
-        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").selectNode("        218")
-        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").topNode = "        212"
-        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").doubleClickNode("        218")
-        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/txt%%DYN001-LOW").text = num_shipment
-        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/txt%%DYN001-LOW").setFocus()
-        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/txt%%DYN001-LOW").caretPosition = 9
-        self.session.findById("wnd[0]").sendVKey(0)
+        try:
+            self.session.findById("wnd[0]/tbar[1]/btn[16]").press()
+            
+            self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").expandNode("         68")
+            self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").topNode = "         68"
+
+            self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").selectNode("        218")
+            self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").doubleClickNode("        218")
+            self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/txt%%DYN001-LOW").text = num_shipment
+            self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/txt%%DYN001-LOW").setFocus()
+            self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/txt%%DYN001-LOW").caretPosition = 9
+            self.session.findById("wnd[0]").sendVKey(0)
+            return True
+        except:
+            return False
  
     def set_partnumber(self, partnumber):
-        self.session.findById("wnd[0]/tbar[1]/btn[16]").press
-        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").expandNode("         68")
-        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").selectNode("         74")
-        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").topNode = "         71"
-        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").doubleClickNode("         74")
-        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN001-LOW").text = partnumber
-        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN001-LOW").setFocus()
-        self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN001-LOW").caretPosition = 18
-        self.session.findById("wnd[0]").sendVKey(0)
- 
+        try:
+            self.session.findById("wnd[0]/tbar[1]/btn[16]").press
+            self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").expandNode("         68")
+            self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").selectNode("         74")
+            self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").topNode = "         71"
+            self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/cntlSUB_CONTAINER/shellcont/shellcont/shell/shellcont[1]/shell").doubleClickNode("         74")
+            self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN001-LOW").text = partnumber
+            self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN001-LOW").setFocus()
+            self.session.findById("wnd[0]/usr/ssub%_SUBSCREEN_%_SUB%_CONTAINER:SAPLSSEL:2001/ssubSUBSCREEN_CONTAINER2:SAPLSSEL:2000/ssubSUBSCREEN_CONTAINER:SAPLSSEL:1106/ctxt%%DYN001-LOW").caretPosition = 18
+            self.session.findById("wnd[0]").sendVKey(0)
+            return True
+        except:
+            return False
+    
     def set_b01(self):
         self.log.info("Setting filter B01 for LT22")
         try:
@@ -278,10 +218,35 @@ class LT22_Submit:
             raise
 
     def extract_lt22(self):
+        try:
+            grid = self.session.FindById("wnd[0]/usr/cntlGRID1/shellcont/shell")
+        except:
+            self.log.info("LT22: GRID not found — probably no data.")
+            return False
+
+        if grid.RowCount == 0:
+            self.log.info("LT22: GRID found but empty.")
+            return False
+
         self.session.findById("wnd[0]/tbar[1]/btn[9]").press()
-        self.session.findById("wnd[1]/usr/subSUBSCREEN_STEPLOOP:SAPLSPO5:0150/sub:SAPLSPO5:0150/radSPOPLI-SELFLAG[1,0]").select()
+        self.session.findById(
+            "wnd[1]/usr/subSUBSCREEN_STEPLOOP:SAPLSPO5:0150/"
+            "sub:SAPLSPO5:0150/radSPOPLI-SELFLAG[1,0]"
+        ).select()
+
         self.session.findById("wnd[1]/tbar[0]/btn[0]").press()
-        self.session.findById("wnd[1]/usr/ctxtDY_PATH").text = os.path.join(os.environ["USERPROFILE"], ".000 - Projetos", "auto-line-feeding", "backend", "core", "storage", "sap")
+
+        self.session.findById("wnd[1]/usr/ctxtDY_PATH").text = os.path.join(
+            settings.USER_PROFILE,
+            ".000 - Projetos",
+            "auto-line-feeding",
+            "backend",
+            "core",
+            "storage",
+            "sap",
+        )
+
         self.session.findById("wnd[1]/usr/ctxtDY_FILENAME").text = "lt22.txt"
-        self.session.findById("wnd[0]/tbar[1]/btn[9]").press()
-        self.session.findById("wnd[1]/tbar[0]/btn[0]").press()
+        self.session.findById("wnd[1]/tbar[0]/btn[11]").press()
+
+        return True

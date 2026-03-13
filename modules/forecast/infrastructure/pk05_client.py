@@ -18,7 +18,6 @@ class PK05_Client:
 
             payload = resp.json()
 
-            # A API NÃO RETORNA LISTA — E SIM UM OBJETO COM DATA
             if not isinstance(payload, dict) or "data" not in payload:
                 raise ValueError(
                     f"Invalid PK05 response, expected dict with 'data' but got: {payload}"

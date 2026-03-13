@@ -50,5 +50,5 @@ def lt22_request(
         log.info("LT22 request pipeline executed successfully")
         return {"message": "LT22 executed successfully.", "success": result}
     except Exception as e:
-        log.error("Error in LT22 request", exc_info=True)
+        log.error("Error in LT22 request %s", e, exc_info=True)
         raise http_500("Error in LT22 request: ", e)
