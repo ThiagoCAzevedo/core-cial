@@ -1,6 +1,6 @@
-from database.models import assembly
-from database.models import forecast
-from database.models import fx4pd
-from database.models import pk05
-from database.models import pkmc
-from database.models import requests_made
+from modules.assembly.domain.models import Assembly
+from modules.forecast.domain.models import FX4PD, Forecast
+from modules.requests_builder.domain.models import RequestsMade
+
+__all__ = ["Assembly", "FX4PD", "Forecast", "RequestsMade"]
+
